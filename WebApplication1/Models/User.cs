@@ -6,17 +6,29 @@ namespace EcommerceApp.Models
     public class User
     {
         [Key]
-        public int Id { get; set; }
-        [Required, NotNull]
-        public string Firstname { get; set; }
-        public string Lasttname { get; set; }
-        [Required, NotNull]
-        public string Email { get; set; }
-        [Required, NotNull]
-        public string Password { get; set; }
-        public Boolean IsDeleted { get; set; } = false;
-        [Required, NotNull]
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public int UserId { get; set; }
 
+        [Required]
+        public string UserName { get; set; }
+
+        [Required]
+        public string Email { get; set; }
+
+        public string Password { get; set; }
+
+        public UserRole Role { get; set; }
+
+        public ICollection<Cart> Carts { get; set; }
+
+        public ICollection<Wishlist> Wishlists { get; set; }
+
+        public ICollection<Order> Orders { get; set; }
+
+    }
+    public enum UserRole
+    {
+        Client,
+        Admin,
+        Manager,
     }
 }
