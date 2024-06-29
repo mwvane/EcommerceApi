@@ -6,5 +6,6 @@
         {
             return null;
         }
+       public  const string hostName = "https://localhost:7287/";
     }
 }
