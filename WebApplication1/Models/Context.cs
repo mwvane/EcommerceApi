@@ -24,6 +24,7 @@ namespace EcommerceApp.Models
         public DbSet<Manufacturer> Manufacturers { get; set; }
         public DbSet<Country> Countries { get; set; }
         public DbSet<Option> Options { get; set; }
+        public DbSet<ProductOption> ProductOptions { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -93,7 +94,7 @@ namespace EcommerceApp.Models
                 new Country { CountryId = 3, Name = "Georgia", ImageUrl = "/Resources/Images/Countries/Georgia.jpg" });
 
             modelBuilder.Entity<Manufacturer>().HasData(
-                new Manufacturer { ManufacturerId = 1, Name = "Samsung", CountryId = 19 },
+                new Manufacturer { ManufacturerId = 1, Name = "Samsung", CountryId = 1 },
                 new Manufacturer { ManufacturerId = 2, Name = "Kingstone", CountryId = 2 });
 
             //modelBuilder.Entity<Option>().HasData(

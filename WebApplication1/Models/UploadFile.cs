@@ -2,7 +2,8 @@
 {
     public class UploadFile
     {
-        //public int UserId { get; set; }
-        public IFormFile File { get; set; }
+        public int Id { get; set; }
+        public IFormFileCollection File { get; set; }
+        public UploadType UploadType { get; set; }
     }
 }
