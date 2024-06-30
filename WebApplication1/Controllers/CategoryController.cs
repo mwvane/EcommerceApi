@@ -46,5 +46,21 @@ namespace EcommerceApp.Controllers
             return new Result { Error = new List<string> { "category with this name, already exist" } };
         }
 
+        [HttpDelete("DeleteCategory")]
+        public async Task<IActionResult> DeleteCategory([FromBody] List<int> categoryIds)
+        {
+            foreach (var id in categoryIds)
+            {
+                var category = await _context.Categories.FindAsync(id);
+                if (category != null)
+                {
+                    _context.Categories.Remove(category);
+                }
+            };
+            _context.SaveChanges();
+            return Ok();
+
+        }
+
     }
 }

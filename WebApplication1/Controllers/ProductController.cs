@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Net;
 using System.Text.Json;
 
 namespace EcommerceApp.Controllers
@@ -18,20 +19,6 @@ namespace EcommerceApp.Controllers
         {
             _context = context;
         }
-        [HttpPost("CreateProduct")]
-        public Result CreateProduct([FromBody] Product product)
-        {
-            //_context.Products.Add(new Product()
-            //{
-            //    Name = "ბოტასი",
-            //    Price = 100,
-            //    Quantity = 150,
-            //    CategoryId = 1,
-            //    Description = "სატესტო პროდუქტი"
-            //});
-            //_context.SaveChanges();
-            return new Result() { Data = null };
-        }
         [HttpGet("GetProducts")]
         public Result GetProducts()
         {
@@ -39,13 +26,77 @@ namespace EcommerceApp.Controllers
             return new Result() { Data = data };
         }
 
-        [HttpPost("AddProduct"),DisableRequestSizeLimit]
-        public Result AddProduct([FromForm] IFormCollection data)
+        [HttpPost("AddProduct"), DisableRequestSizeLimit]
+        public async Task<Result> AddProduct([FromForm] IFormCollection data)
         {
             var images = data.Files;
             var productJson = data["product"];
-            ProductDto product = JsonConvert.DeserializeObject<ProductDto>(productJson[0]);
+            ProductDto productDto = JsonConvert.DeserializeObject<ProductDto>(productJson[0]);
+            var product = new Product
+            {
+                ManufacturerId = productDto!.Manufacturer.Id,
+                CategoryId = productDto.Category.Id,
+                Description = productDto.Description!,
+                Name = productDto.Name,
+                Price = productDto.Price,
+            };
+            _context.Products.Add(product);
+            _context.SaveChanges();
+
+            //set options
+            foreach (var item in productDto.Options)
+            {
+                _context.ProductOptions.Add(new ProductOption { OptionId = item.Id, ProductId = product.ProductId });
+            }
+            _context.SaveChanges();
+
+            // SAVE IMAGES
+            var urls = await FileService.SaveFile(new UploadFile { Id = product.ProductId, File = images, UploadType = UploadType.ProductImage });
+
+            //Bind images to product
+            if (urls != null)
+            {
+                foreach (var url in urls)
+                {
+                    _context.ProductImages.Add(new ProductImages { ProductId = product.ProductId, Url = url });
+                }
+                _context.SaveChanges();
+            }
+
+
             return new Result() { Data = product };
+        }
+
+        [HttpDelete("DeleteProduct/{id}")]
+        public async Task<IActionResult> DeleteProduct(int id)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if(product != null)
+            {
+                _context.Products.Remove(product);
+                _context.SaveChanges();
+                 return Ok();
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpDelete("DeleteProducts")]
+        public async Task<IActionResult> DeleteProducts([FromBody] List<int> productIds)
+        {
+            foreach (var id in productIds)
+            {
+                var product = await _context.Products.FindAsync(id);
+                if (product != null)
+                {
+                    _context.Products.Remove(product);
+                }
+            };
+            _context.SaveChanges();
+            return Ok();
+
         }
 
         private object GetProductsByType(ProductType productType = ProductType.None)
@@ -59,19 +110,19 @@ namespace EcommerceApp.Controllers
                         .Include(p => p.ProductImages)
                         .Include(p => p.Discounts)
                         .Include(p => p.ViewCounts)
-                        .Select(p => new 
+                        .Select(p => new
                         {
                             ProductId = p.ProductId,
                             Name = p.Name,
                             Price = p.Price,
                             Description = p.Description,
-                            Category  = new CategoryDto{ Id = p.Category.CategoryId, Name = p.Category.Name },
+                            Category = new CategoryDto { Id = p.Category.CategoryId, Name = p.Category.Name },
                             CreateDate = p.CreateDate,
-                            Manufacturer = new ManufacturerDto { Id = p.ManufacturerId,  Name = p.Manufacturer.Name},
+                            Manufacturer = new ManufacturerDto { Id = p.ManufacturerId, Name = p.Manufacturer.Name },
                             Rating = p.Ratings.Any() ? p.Ratings.Average(r => r.Rating) : 0,
                             //ProductImages = p.ProductImages.Select(img => img.Url).ToList(),
-                            ProductImages = p.ProductImages.Select(i => new ProductImagesDto { Url = i.Url }).ToList(),
-                            Discounts = p.Discounts.Select(d => new DiscountDto {Id =  d.DiscountId, DiscountAmount =  d.DiscountAmount, StartDate =  d.StartDate, EndDate =  d.EndDate }).ToList(),
+                            ProductImages = p.ProductImages.Select(i => new ProductImagesDto { Url = Path.Combine(Helpers.hostName, i.Url) }).ToList(),
+                            Discounts = p.Discounts.Select(d => new DiscountDto { Id = d.DiscountId, DiscountAmount = d.DiscountAmount, StartDate = d.StartDate, EndDate = d.EndDate }).ToList(),
                             ViewCount = p.ViewCounts.Count(),
                             Options = p.ProductOptions
                             .GroupBy(po => po.Option.OptionType)
