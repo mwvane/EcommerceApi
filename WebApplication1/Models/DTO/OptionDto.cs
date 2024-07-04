@@ -5,7 +5,8 @@
         public int Id { get; set; }
         public string Name { get; set; }
         public string Value { get; set; }
-        public OptionType OptionType { get; set; } = OptionType.None;
+        public int OptionTypeId {  get; set; }
+        public OptionType? OptionType { get; set; }
         //public ICollection<ProductOption>? ProductOptions { get; set; }
     }
 }

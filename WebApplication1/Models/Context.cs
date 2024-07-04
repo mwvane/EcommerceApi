@@ -24,6 +24,7 @@ namespace EcommerceApp.Models
         public DbSet<Manufacturer> Manufacturers { get; set; }
         public DbSet<Country> Countries { get; set; }
         public DbSet<Option> Options { get; set; }
+        public DbSet<OptionType> OptionsTypes { get; set; }
         public DbSet<ProductOption> ProductOptions { get; set; }
 
 
@@ -61,6 +62,11 @@ namespace EcommerceApp.Models
                 .HasOne(po => po.Option)
                 .WithMany(o => o.ProductOptions)
                 .HasForeignKey(po => po.OptionId);
+
+            modelBuilder.Entity<Option>()
+            .HasOne(o => o.OptionType)
+            .WithMany(ot => ot.Options)
+            .HasForeignKey(o => o.OptionTypeId);
 
             // INITIAL DATA
             modelBuilder.Entity<Category>().HasData(

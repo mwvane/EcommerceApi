@@ -2,6 +2,7 @@
 using EcommerceApp.Models;
 using Microsoft.AspNetCore.Mvc;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.EntityFrameworkCore;
 
 namespace EcommerceApp.Controllers
 {
@@ -17,7 +18,7 @@ namespace EcommerceApp.Controllers
         [HttpGet("GetOptions")]
         public Result GetOptions()
         {
-            var data = _context.Options.Select(o => new OptionDto
+            var data = _context.Options.Include(ot=> ot.OptionType).Select(o => new OptionDto
             {
                 Id = o.OptionId,
                 Name = $"{o.Name} ({o.Value} )",
@@ -25,6 +26,57 @@ namespace EcommerceApp.Controllers
                 OptionType = o.OptionType
         });
             return new Result() { Data = data };
+        }
+
+        [HttpGet("GetOptionTypes")]
+        public Result GetOptionTypes()
+        {
+            var data = _context.OptionsTypes.Select(o => new
+            {
+                Id = o.OptionTypeId,
+                o.Name,
+            });
+            return new Result() { Data = data };
+        }
+
+        [HttpPost("AddOption")]
+        public  IActionResult AddOption([FromBody] OptionDto option)
+        {
+            var optionToSave = new Option()
+            {
+                Name = option.Name,
+                OptionTypeId = option.OptionTypeId,
+                Value = option.Value,
+            };
+            try
+            {
+                _context.Options.Add(optionToSave);
+                _context.SaveChanges();
+                return Ok(option);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("AddOptionType")]
+        public IActionResult AddOptionType([FromBody] OptionTypeDto optionType)
+        {
+            var optionTypeToSave = new OptionType()
+            {
+                Name = optionType.Name,
+            };
+            try
+            {
+                _context.OptionsTypes.Add(optionTypeToSave);
+                _context.SaveChanges();
+                return Ok(optionType);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }
