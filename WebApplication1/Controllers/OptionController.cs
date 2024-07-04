@@ -1,7 +1,6 @@
 ﻿using EcommerceApp.Models.DTO;
 using EcommerceApp.Models;
 using Microsoft.AspNetCore.Mvc;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using Microsoft.EntityFrameworkCore;
 
 namespace EcommerceApp.Controllers

@@ -15,7 +15,7 @@ namespace EcommerceApp.Controllers
             _context = context;
         }
         [HttpGet("GetCategories")]
-        public Result  GetCategories()
+        public Result GetCategories()
         {
             var data = _context.Categories.Include(c => c.SubCategories).ToList().Where(x => x.ParentCategoryId == null);
             return new Result() { Data = data };
@@ -34,16 +34,16 @@ namespace EcommerceApp.Controllers
         }
 
         [HttpPost("AddCategory")]
-        public Result AddCategory([FromBody] CategoryDto category)
+        public async Task<IActionResult> AddCategory([FromBody] CategoryDto category)
         {
             var exist = _context.Categories.Any(c => c.Name.ToLower() == category.Name.ToLower());
             if (!exist)
             {
-                _context.Categories.Add(new Category { Name = category.Name, Image = category.Image});
+                _context.Categories.Add(new Category { Name = category.Name, Image = category.Image, ParentCategoryId = category.ParentCategoryId });
                 _context.SaveChanges();
-                return new Result { Data = category };
+                return Ok(category);
             }
-            return new Result { Error = new List<string> { "category with this name, already exist" } };
+            return BadRequest("category with this name, already exist");
         }
 
         [HttpDelete("DeleteCategory")]

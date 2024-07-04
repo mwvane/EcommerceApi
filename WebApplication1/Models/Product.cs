@@ -22,7 +22,7 @@ namespace EcommerceApp.Models
         public int CategoryId { get; set; }
         public Category Category { get; set; }
         public int ManufacturerId { get; set; }
-        public DateTime CreateDate { get; set; }
+        public DateTime CreateDate { get; set; } = DateTime.Now;
         public ICollection<ProductOption> ProductOptions { get; set; }
         public Manufacturer Manufacturer { get; set; }
 
