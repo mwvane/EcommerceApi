@@ -39,8 +39,8 @@ namespace EcommerceApp.Controllers
             var exist = _context.Categories.Any(c => c.Name.ToLower() == category.Name.ToLower());
             if (!exist)
             {
-                _context.Categories.Add(new Category { Name = category.Name, Image = category.Image, ParentCategoryId = category.ParentCategoryId });
-                _context.SaveChanges();
+                await _context.Categories.AddAsync(new Category { Name = category.Name, Image = category.Image, ParentCategoryId = category.ParentCategoryId });
+                await _context.SaveChangesAsync();
                 return Ok(category);
             }
             return BadRequest("category with this name, already exist");

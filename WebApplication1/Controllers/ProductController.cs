@@ -40,15 +40,15 @@ namespace EcommerceApp.Controllers
                 Name = productDto.Name,
                 Price = productDto.Price,
             };
-            _context.Products.Add(product);
-            _context.SaveChanges();
+            await _context.Products.AddAsync(product);
+            await _context.SaveChangesAsync();
 
             //set options
             foreach (var item in productDto.Options)
             {
                 _context.ProductOptions.Add(new ProductOption { OptionId = item.Id, ProductId = product.ProductId });
             }
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             // SAVE IMAGES
             var urls = await FileService.SaveFile(new UploadFile { Id = product.ProductId, File = images, UploadType = UploadType.ProductImage });

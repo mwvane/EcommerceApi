@@ -39,7 +39,7 @@ namespace EcommerceApp.Controllers
         }
 
         [HttpPost("AddOption")]
-        public  IActionResult AddOption([FromBody] OptionDto option)
+        public  async Task<IActionResult> AddOption([FromBody] OptionDto option)
         {
             var optionToSave = new Option()
             {
@@ -49,8 +49,8 @@ namespace EcommerceApp.Controllers
             };
             try
             {
-                _context.Options.Add(optionToSave);
-                _context.SaveChanges();
+                await _context.Options.AddAsync(optionToSave);
+                await _context.SaveChangesAsync();
                 return Ok(option);
             }
             catch (Exception ex)
