@@ -15,15 +15,36 @@ namespace EcommerceApp.Controllers
             _context = context;
         }
         [HttpGet("GetManufacturers")]
-        public Result GetManufacturers()
+        public IActionResult GetManufacturers()
         {
             var data = _context.Manufacturers.Include(m => m.Country).Select(m => new ManufacturerDto
             {
-                Id = m.ManufacturerId, 
+                Id = m.ManufacturerId,
                 Name = m.Name,
-                CountryName = m.Country.Name
+                Country = new CountryDto() { Id = m.Country.CountryId, Name = m.Country.Name, Image = m.Country.Image },
             });
-            return new Result() { Data = data };
+            return Ok(data);
+        }
+        [HttpPost("AddManufacturer")]
+        public async Task<IActionResult> AddManufacturer([FromBody] ManufacturerDto manufacturer)
+        {
+            var newManufacturer = new Manufacturer()
+            {
+                CountryId = manufacturer.Country.Id,
+                Name = manufacturer.Name
+            };
+            try
+            {
+                await _context.Manufacturers.AddAsync(newManufacturer);
+                await _context.SaveChangesAsync();
+                return Ok(manufacturer);
+
+            }
+            catch(Exception ex)
+            {
+                return BadRequest("Manufacturer not saved," + ex.Message);
+            }
+
         }
 
         [HttpDelete("DeleteManufacturer")]

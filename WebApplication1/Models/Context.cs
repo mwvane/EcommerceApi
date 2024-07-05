@@ -95,9 +95,9 @@ namespace EcommerceApp.Models
                 );
 
             modelBuilder.Entity<Country>().HasData(
-                new Country { CountryId = 1, Name = "South Korea", ImageUrl = "/Resources/Images/Countries/South-Korea.jpg" },
-                new Country { CountryId = 2, Name = "Jamaica", ImageUrl = "/Resources/Images/Countries/Jamaica.jpg" },
-                new Country { CountryId = 3, Name = "Georgia", ImageUrl = "/Resources/Images/Countries/Georgia.jpg" });
+                new Country { CountryId = 1, Name = "South Korea", Image = "/Resources/Images/Countries/South-Korea.jpg" },
+                new Country { CountryId = 2, Name = "Jamaica", Image = "/Resources/Images/Countries/Jamaica.jpg" },
+                new Country { CountryId = 3, Name = "Georgia", Image = "/Resources/Images/Countries/Georgia.jpg" });
 
             modelBuilder.Entity<Manufacturer>().HasData(
                 new Manufacturer { ManufacturerId = 1, Name = "Samsung", CountryId = 1 },
