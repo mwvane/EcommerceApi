@@ -14,6 +14,20 @@ namespace EcommerceApp.Controllers
         {
             _context = context;
         }
+        [HttpGet("GetCategoryById/{id}")]
+        public async Task<IActionResult> GetCategoryById(int id)
+        {
+            var category = await _context.Categories.SingleOrDefaultAsync(c => c.CategoryId == id);
+            if(category != null)
+            {
+                return Ok(category);
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
         [HttpGet("GetCategories")]
         public Result GetCategories()
         {
@@ -44,6 +58,21 @@ namespace EcommerceApp.Controllers
                 return Ok(category);
             }
             return BadRequest("category with this name, already exist");
+        }
+        [HttpPut("UpdateCategory")]
+        public async Task<IActionResult> UpdateCategory([FromBody] CategoryDto category)
+        {
+            var exist = _context.Categories.FirstOrDefault(c => c.CategoryId == category.Id);
+            if (exist != null)
+            {
+                exist.Name = category.Name;
+                exist.ParentCategoryId = category.ParentCategoryId;
+                exist.Image = category.Image;
+                _context.Categories.Update(exist);
+                await _context.SaveChangesAsync();
+                return Ok(category);
+            }
+            return NotFound("category not found");
         }
 
         [HttpDelete("DeleteCategory")]

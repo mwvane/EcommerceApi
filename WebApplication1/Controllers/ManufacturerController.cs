@@ -14,6 +14,32 @@ namespace EcommerceApp.Controllers
         {
             _context = context;
         }
+        [HttpGet("GetManufacturerById/{id}")]
+        public async Task<IActionResult> GetManufacturerById(int id)
+        {
+            var manufacturer = await _context.Manufacturers.
+                Include(c => c.Country).
+                Select(m => new ManufacturerDto
+                {
+                    Id = m.ManufacturerId,
+                    Name = m.Name,
+                    Country = new CountryDto
+                    {
+                        Id = m.Country.CountryId,
+                        Image = m.Country.Image,
+                        Name = m.Country.Name
+                    }
+                }).SingleOrDefaultAsync(c => c.Id == id);
+            if (manufacturer != null)
+            {
+                return Ok(manufacturer);
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
         [HttpGet("GetManufacturers")]
         public IActionResult GetManufacturers()
         {
@@ -40,9 +66,32 @@ namespace EcommerceApp.Controllers
                 return Ok(manufacturer);
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest("Manufacturer not saved," + ex.Message);
+            }
+
+        }
+
+        [HttpPut("UpdateManufacturer")]
+        public async Task<IActionResult> UpdateManufacturer([FromBody] ManufacturerDto manufacturer)
+        {
+            var newManufacturer = new Manufacturer()
+            {
+
+                ManufacturerId = manufacturer.Id,
+                CountryId = manufacturer.Country.Id,
+                Name = manufacturer.Name
+            };
+            try
+            {
+                _context.Manufacturers.Update(newManufacturer);
+                await _context.SaveChangesAsync();
+                return Ok(manufacturer);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Manufacturer not updated," + ex.Message);
             }
 
         }

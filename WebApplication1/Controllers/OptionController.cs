@@ -43,6 +43,7 @@ namespace EcommerceApp.Controllers
         {
             var optionToSave = new Option()
             {
+                OptionId = option.Id,
                 Name = option.Name,
                 OptionTypeId = option.OptionTypeId,
                 Value = option.Value,
@@ -51,7 +52,7 @@ namespace EcommerceApp.Controllers
             {
                 await _context.Options.AddAsync(optionToSave);
                 await _context.SaveChangesAsync();
-                return Ok(option);
+                return Ok(optionToSave);
             }
             catch (Exception ex)
             {
