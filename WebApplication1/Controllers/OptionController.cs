@@ -14,16 +14,38 @@ namespace EcommerceApp.Controllers
         {
             _context = context;
         }
+        [HttpGet("GetOptionById/{id}")]
+        public async Task<IActionResult> GetOptionById(int id)
+        {
+            var option = await _context.Options.
+                Select(o => new OptionDto
+                {
+                    Id = o.OptionId,
+                    Name = o.Name,
+                    OptionTypeId = o.OptionTypeId,
+                    Value = o.Value
+
+                }).SingleOrDefaultAsync(c => c.Id == id);
+            if (option != null)
+            {
+                return Ok(option);
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
         [HttpGet("GetOptions")]
         public Result GetOptions()
         {
-            var data = _context.Options.Include(ot=> ot.OptionType).Select(o => new OptionDto
+            var data = _context.Options.Include(ot => ot.OptionType).Select(o => new OptionDto
             {
                 Id = o.OptionId,
                 Name = $"{o.Name} ({o.Value} )",
                 Value = o.Value,
                 OptionType = o.OptionType
-        });
+            });
             return new Result() { Data = data };
         }
 
@@ -39,7 +61,7 @@ namespace EcommerceApp.Controllers
         }
 
         [HttpPost("AddOption")]
-        public  async Task<IActionResult> AddOption([FromBody] OptionDto option)
+        public async Task<IActionResult> AddOption([FromBody] OptionDto option)
         {
             var optionToSave = new Option()
             {
@@ -77,6 +99,29 @@ namespace EcommerceApp.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+        [HttpPut("UpdateOption")]
+        public async Task<IActionResult> UpdateOption([FromBody] OptionDto option)
+        {
+            var newOption = new Option()
+            {
+
+                OptionId = option.Id,
+                Value = option.Value,
+                Name = option.Name,
+                OptionTypeId = option.OptionTypeId,
+            };
+            try
+            {
+                _context.Options.Update(newOption);
+                await _context.SaveChangesAsync();
+                return Ok(newOption);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Manufacturer not updated," + ex.Message);
+            }
+
         }
     }
 }
