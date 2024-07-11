@@ -46,7 +46,7 @@ namespace EcommerceApp.Controllers
             //set options
             foreach (var item in productDto.Options)
             {
-                _context.ProductOptions.Add(new ProductOption { OptionId = item.Id, ProductId = product.ProductId });
+                _context.ProductOptions.Add(new ProductOption { OptionId = item.OptionId, ProductId = product.ProductId });
             }
             await _context.SaveChangesAsync();
 
@@ -128,7 +128,7 @@ namespace EcommerceApp.Controllers
                             .GroupBy(po => po.Option.OptionType)
                             .Select(g => g.Select(po => new OptionDto
                             {
-                                Id = po.Option.OptionId,
+                                OptionId = po.Option.OptionId,
                                 Name = po.Option.Name,
                                 Value = po.Option.Value,
                                 OptionType = po.Option.OptionType,

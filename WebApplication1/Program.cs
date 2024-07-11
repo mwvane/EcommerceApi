@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using EcommerceApp.Models;
 using Microsoft.Extensions.FileProviders;
 using System.Text.Json.Serialization;
+using EcommerceApp.ErrorHandling;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<Context>(options =>
@@ -35,6 +36,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 app.UseCors("corspolicy");
+app.UseMiddleware<ErrorHandlerMiddleware>();
 app.MapControllers();
 app.UseStaticFiles(new StaticFileOptions()
 {

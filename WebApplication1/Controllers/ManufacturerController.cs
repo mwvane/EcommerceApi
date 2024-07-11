@@ -15,7 +15,7 @@ namespace EcommerceApp.Controllers
             _context = context;
         }
         [HttpGet("GetManufacturerById/{id}")]
-        public async Task<IActionResult> GetManufacturerById(int id)
+        public async Task<Result> GetManufacturerById(int id)
         {
             var manufacturer = await _context.Manufacturers.
                 Include(c => c.Country).
@@ -32,27 +32,39 @@ namespace EcommerceApp.Controllers
                 }).SingleOrDefaultAsync(c => c.Id == id);
             if (manufacturer != null)
             {
-                return Ok(manufacturer);
+                return new Result()
+                {
+                    Data = manufacturer,
+                    Success = "true"
+                };
             }
             else
             {
-                return NotFound();
+                return new Result() { Error = new List<string> { $"manufacturer with id {id} not found" } };
             }
         }
 
         [HttpGet("GetManufacturers")]
-        public IActionResult GetManufacturers()
+        public Result GetManufacturers()
         {
-            var data = _context.Manufacturers.Include(m => m.Country).Select(m => new ManufacturerDto
+            var manufacturer = _context.Manufacturers.Include(m => m.Country).Select(m => new ManufacturerDto
             {
                 Id = m.ManufacturerId,
                 Name = m.Name,
                 Country = new CountryDto() { Id = m.Country.CountryId, Name = m.Country.Name, Image = m.Country.Image },
             });
-            return Ok(data);
+            if(manufacturer != null)
+            {
+                return new Result()
+                {
+                    Data = manufacturer,
+                    Success = "true"
+                };
+            }
+            return new Result() { Error = new List<string> { "manufacturers couldn't load" } };
         }
         [HttpPost("AddManufacturer")]
-        public async Task<IActionResult> AddManufacturer([FromBody] ManufacturerDto manufacturer)
+        public async Task<Result> AddManufacturer([FromBody] ManufacturerDto manufacturer)
         {
             var newManufacturer = new Manufacturer()
             {
@@ -63,18 +75,22 @@ namespace EcommerceApp.Controllers
             {
                 await _context.Manufacturers.AddAsync(newManufacturer);
                 await _context.SaveChangesAsync();
-                return Ok(manufacturer);
+                return new Result()
+                {
+                    Data = newManufacturer,
+                    Success = "manufacturer successfully added"
+                };
 
             }
             catch (Exception ex)
             {
-                return BadRequest("Manufacturer not saved," + ex.Message);
+                return new Result() { Error = new List<string>() { "faild to add," + ex.Message } };
             }
 
         }
 
         [HttpPut("UpdateManufacturer")]
-        public async Task<IActionResult> UpdateManufacturer([FromBody] ManufacturerDto manufacturer)
+        public async Task<Result> UpdateManufacturer([FromBody] ManufacturerDto manufacturer)
         {
             var newManufacturer = new Manufacturer()
             {
@@ -87,17 +103,21 @@ namespace EcommerceApp.Controllers
             {
                 _context.Manufacturers.Update(newManufacturer);
                 await _context.SaveChangesAsync();
-                return Ok(manufacturer);
+                return new Result()
+                {
+                    Data = newManufacturer,
+                    Success = "manufacturer successfully updated"
+                };
             }
             catch (Exception ex)
             {
-                return BadRequest("Manufacturer not updated," + ex.Message);
+                return new Result() { Error = new List<string>() { "faild to update," + ex.Message } };
             }
 
         }
 
         [HttpDelete("DeleteManufacturer")]
-        public async Task<IActionResult> DeleteManufacturer([FromBody] List<int> manufacturerIds)
+        public async Task<Result> DeleteManufacturer([FromBody] List<int> manufacturerIds)
         {
             foreach (var id in manufacturerIds)
             {
@@ -107,9 +127,19 @@ namespace EcommerceApp.Controllers
                     _context.Manufacturers.Remove(manufacturer);
                 }
             };
-            _context.SaveChanges();
-            return Ok();
+            try
+            {
+                await _context.SaveChangesAsync();
+                return new Result()
+                {
+                    Success = "manufacturer successfully updated"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new Result() { Error = new List<string>() { "faild to delete", ex.Message } };
 
+            }
         }
     }
 }
