@@ -1,4 +1,5 @@
-﻿using EcommerceApp.Models;
+﻿using EcommerceApp.ErrorHandling;
+using EcommerceApp.Models;
 using EcommerceApp.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -40,7 +41,7 @@ namespace EcommerceApp.Controllers
             }
             else
             {
-                return new Result() { Error = new List<string> { $"manufacturer with id {id} not found" } };
+                throw new NotFoundException($"manufacturer with id {id} not found");
             }
         }
 
@@ -53,7 +54,7 @@ namespace EcommerceApp.Controllers
                 Name = m.Name,
                 Country = new CountryDto() { Id = m.Country.CountryId, Name = m.Country.Name, Image = m.Country.Image },
             });
-            if(manufacturer != null)
+            if (manufacturer != null)
             {
                 return new Result()
                 {
@@ -61,30 +62,60 @@ namespace EcommerceApp.Controllers
                     Success = "true"
                 };
             }
-            return new Result() { Error = new List<string> { "manufacturers couldn't load" } };
+            throw new NotFoundException("manufacturers couldn't load");
         }
+
         [HttpPost("AddManufacturer")]
-        public async Task<Result> AddManufacturer([FromBody] ManufacturerDto manufacturer)
+        public async Task<Result> AddManufacturer([FromBody] ManufacturerDto manufacturer, CRUD_Action action = CRUD_Action.Create)
         {
+            if (_context.Manufacturers.Any(m => m.Name == manufacturer.Name))
+            {
+                return new Result()
+                {
+                    Notification = new Notification()
+                    {
+                        Message = $"manufacturer with name '{manufacturer.Name}' already exists",
+                        Status = NotificationStatus.Warning,
+                        Title = "already exists"
+                    }
+                };
+            }
             var newManufacturer = new Manufacturer()
             {
+                ManufacturerId = manufacturer.Id,
                 CountryId = manufacturer.Country.Id,
                 Name = manufacturer.Name
             };
             try
             {
-                await _context.Manufacturers.AddAsync(newManufacturer);
+                if (action == CRUD_Action.Create)
+                {
+                    await _context.Manufacturers.AddAsync(newManufacturer);
+                }
+                else if (action == CRUD_Action.Update)
+                {
+                    _context.Manufacturers.Update(newManufacturer);
+                }
                 await _context.SaveChangesAsync();
                 return new Result()
                 {
                     Data = newManufacturer,
-                    Success = "manufacturer successfully added"
+                    Notification = new Notification()
+                    {
+                        Message = $"manufacturer {action.ToString()}d successfully",
+                        Title = "successfully added",
+                        Status = NotificationStatus.Success,
+                    }
                 };
 
             }
             catch (Exception ex)
             {
-                return new Result() { Error = new List<string>() { "faild to add," + ex.Message } };
+                return new Result() {Notification = new Notification() { 
+                    Message  = $"faild to {action.ToString()} manufacturer",
+                    Status = NotificationStatus.Error,
+                    Title = "Error",
+                } };
             }
 
         }
@@ -92,27 +123,8 @@ namespace EcommerceApp.Controllers
         [HttpPut("UpdateManufacturer")]
         public async Task<Result> UpdateManufacturer([FromBody] ManufacturerDto manufacturer)
         {
-            var newManufacturer = new Manufacturer()
-            {
-
-                ManufacturerId = manufacturer.Id,
-                CountryId = manufacturer.Country.Id,
-                Name = manufacturer.Name
-            };
-            try
-            {
-                _context.Manufacturers.Update(newManufacturer);
-                await _context.SaveChangesAsync();
-                return new Result()
-                {
-                    Data = newManufacturer,
-                    Success = "manufacturer successfully updated"
-                };
-            }
-            catch (Exception ex)
-            {
-                return new Result() { Error = new List<string>() { "faild to update," + ex.Message } };
-            }
+            var result =  await AddManufacturer(manufacturer, CRUD_Action.Update);
+            return result;
 
         }
 
@@ -126,19 +138,35 @@ namespace EcommerceApp.Controllers
                 {
                     _context.Manufacturers.Remove(manufacturer);
                 }
+                else
+                {
+                    return new Result()
+                    {
+                        Notification = new Notification()
+                        {
+                            Message = $"slected manufacturer couldn't deleted . manufacturer with id = {id} not found",
+                            Status = NotificationStatus.Error,
+                            Title = "Couldn't delete"
+                        },
+                    };
+                }
             };
             try
             {
                 await _context.SaveChangesAsync();
                 return new Result()
                 {
-                    Success = "manufacturer successfully updated"
+                    Notification = new Notification()
+                    {
+                        Message = $"manufacturer deleted successfully",
+                        Status = NotificationStatus.Success,
+                        Title = "successfully deleted"
+                    },
                 };
             }
             catch (Exception ex)
             {
-                return new Result() { Error = new List<string>() { "faild to delete", ex.Message } };
-
+                throw new Exception("somthing went wrong! : " + ex.Message);
             }
         }
     }
