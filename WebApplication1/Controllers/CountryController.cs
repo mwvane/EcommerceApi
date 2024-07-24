@@ -1,4 +1,6 @@
-﻿using EcommerceApp.Models;
+﻿using EcommerceApp.Data;
+using EcommerceApp.ErrorHandling;
+using EcommerceApp.Models;
 using EcommerceApp.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,19 +17,19 @@ namespace EcommerceApp.Controllers
             _context = context;
         }
         [HttpGet("GetCountries")]
-        public IActionResult GetCountries()
+        public Result GetCountries()
         {
-            var data =  _context.Countries.Select(c => new CountryDto()
+            var data = _context.Countries.Select(c => new CountryDto()
             {
                 Id = c.CountryId,
                 Name = c.Name,
                 Image = c.Image
             });
-            return Ok(data);
+            return new Result() { Data = data };
         }
 
         [HttpDelete("DeleteCountry")]
-        public async Task<IActionResult> DeleteCountry([FromBody] List<int> countryIds)
+        public async Task<Result> DeleteCountry([FromBody] List<int> countryIds)
         {
             foreach (var id in countryIds)
             {
@@ -38,12 +40,35 @@ namespace EcommerceApp.Controllers
                 }
                 else
                 {
-                    return NotFound($"country with id = {id} not found");
-                }
-            };
-            _context.SaveChanges();
-            return Ok("country successfully deleted");
+                    return new Result()
+                    {
+                        Notification = new Notification()
+                        {
+                            Message = $"failed:  country with id = {id} not found",
+                            Status = NotificationStatus.Error,
+                            Title = "couldn't deleted"
+                        }
+                    };
+                };
+            }
+            try
+            {
+                await _context.SaveChangesAsync();
+                return new Result()
+                {
+                    Notification = new Notification()
+                    {
+                        Message = "selected countries deleted successfully",
+                        Status = NotificationStatus.Success,
+                        Title = "successfully deleted"
+                    }
+                };
 
+            }
+            catch (Exception ex)
+            {
+                throw new NotFoundException("Failed to deletete selected countries");
+            }
         }
     }
 }

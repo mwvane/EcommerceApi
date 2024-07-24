@@ -1,4 +1,5 @@
-﻿using EcommerceApp.Models;
+﻿using EcommerceApp.Data;
+using EcommerceApp.Models;
 using EcommerceApp.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

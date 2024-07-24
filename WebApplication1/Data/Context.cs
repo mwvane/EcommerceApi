@@ -1,8 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using EcommerceApp.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Data;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace EcommerceApp.Models
+namespace EcommerceApp.Data
 {
     public class Context : DbContext
     {
@@ -127,11 +128,14 @@ namespace EcommerceApp.Models
                 {
                     UserId = 1,
                     Email = "test@gmail.com",
-                    UserName = "test@gmail.com",
                     Role = UserRole.Client,
                     Password = "password",
-
+                    Firstname = "test",
+                    Lastname = "password",
+                    Phone = "598456000",
+                    Image = "",
                 });
+
             modelBuilder.Entity<ProductRating>().HasData(
                 new ProductRating
                 {

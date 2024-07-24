@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
 
 namespace EcommerceApp.Models
 {
@@ -9,14 +8,23 @@ namespace EcommerceApp.Models
         public int UserId { get; set; }
 
         [Required]
-        public string UserName { get; set; }
-
-        [Required]
         public string Email { get; set; }
 
+        [Required]
         public string Password { get; set; }
 
-        public UserRole Role { get; set; }
+        [Required]
+        public string Firstname { get; set; }
+
+        [Required]
+        public string Lastname { get; set; }
+
+        public string Phone { get; set; }
+        public string? Image { get; set; }
+        public DateTime CreateDate { get; set; } = DateTime.Now;
+
+        [Required]
+        public UserRole Role { get; set; } = UserRole.Client;
 
         public ICollection<Cart> Carts { get; set; }
 

@@ -31,11 +31,12 @@ namespace EcommerceApp.ErrorHandling
 
         private static Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
+            Console.WriteLine("-------------------------------------" + exception.ToString());
             var response = context.Response;
             response.ContentType = "application/json";
 
             var statusCode = HttpStatusCode.InternalServerError;
-            var message = "An unexpected error occurred.";
+            var message = exception.Message;
 
             if (exception is NotFoundException)
             {

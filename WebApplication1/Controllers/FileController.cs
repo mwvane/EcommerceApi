@@ -1,4 +1,4 @@
-﻿using EcommerceApp.Models;
+﻿using EcommerceApp.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Net.Http.Headers;

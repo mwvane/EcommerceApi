@@ -1,5 +1,8 @@
-﻿using EcommerceApp.Models;
+﻿using EcommerceApp.Data;
+using EcommerceApp.ErrorHandling;
+using EcommerceApp.Models;
 using EcommerceApp.Models.DTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,16 +18,19 @@ namespace EcommerceApp.Controllers
             _context = context;
         }
         [HttpGet("GetCategoryById/{id}")]
-        public async Task<IActionResult> GetCategoryById(int id)
+        public async Task<Result> GetCategoryById(int id)
         {
             var category = await _context.Categories.SingleOrDefaultAsync(c => c.CategoryId == id);
             if(category != null)
             {
-                return Ok(category);
+                return new Result()
+                {
+                    Data = category
+                };
             }
             else
             {
-                return NotFound();
+                throw new NotFoundException($"category with ID - {id} not found ");
             }
         }
 
@@ -47,36 +53,64 @@ namespace EcommerceApp.Controllers
             return new Result() { Data = data };
         }
 
+        [Authorize]
         [HttpPost("AddCategory")]
-        public async Task<IActionResult> AddCategory([FromBody] CategoryDto category)
+        public async Task<Result> AddCategory([FromBody] CategoryDto category, CRUD_Action action = CRUD_Action.Create)
         {
             var exist = _context.Categories.Any(c => c.Name.ToLower() == category.Name.ToLower());
             if (!exist)
             {
-                await _context.Categories.AddAsync(new Category { Name = category.Name, Image = category.Image, ParentCategoryId = category.ParentCategoryId });
-                await _context.SaveChangesAsync();
-                return Ok(category);
+                try
+                {
+                    Category newCategory = new Category { CategoryId = category.Id,  Name = category.Name, Image = category.Image, ParentCategoryId = category.ParentCategoryId };
+
+                    if (action == CRUD_Action.Create)
+                    {
+                        await _context.Categories.AddAsync(newCategory);
+                    }
+                    else if(action == CRUD_Action.Update)
+                    {
+                        _context.Categories.Update(newCategory);
+                    }
+                    await _context.SaveChangesAsync();
+                    return new Result()
+                    {
+                        Data = newCategory,
+                        Notification = new Notification()
+                        {
+                            Message = $"category with name '{category.Name.ToUpper()}' {action.ToString()}d successfully",
+                            Status = NotificationStatus.Success,
+                            Title = $"successfully {action.ToString()}d"
+                        } 
+                    };
+                }
+                catch (Exception ex)
+                {
+                    throw new NotFoundException($"faild to {action.ToString()} category");
+                }
             }
-            return BadRequest("category with this name, already exist");
+            else
+            {
+                return new Result()
+                {
+                    Notification = new Notification()
+                    {
+                        Message = $"category with name '{category.Name}' already exist",
+                        Status = NotificationStatus.Warning,
+                        Title = $"already exist"
+                    }
+                };
+            }
         }
         [HttpPut("UpdateCategory")]
-        public async Task<IActionResult> UpdateCategory([FromBody] CategoryDto category)
+        public async Task<Result> UpdateCategory([FromBody] CategoryDto category)
         {
-            var exist = _context.Categories.FirstOrDefault(c => c.CategoryId == category.Id);
-            if (exist != null)
-            {
-                exist.Name = category.Name;
-                exist.ParentCategoryId = category.ParentCategoryId;
-                exist.Image = category.Image;
-                _context.Categories.Update(exist);
-                await _context.SaveChangesAsync();
-                return Ok(category);
-            }
-            return NotFound("category not found");
+            var result = await AddCategory(category, CRUD_Action.Update);
+            return result;
         }
 
         [HttpDelete("DeleteCategory")]
-        public async Task<IActionResult> DeleteCategory([FromBody] List<int> categoryIds)
+        public async Task<Result> DeleteCategory([FromBody] List<int> categoryIds)
         {
             foreach (var id in categoryIds)
             {
@@ -85,9 +119,37 @@ namespace EcommerceApp.Controllers
                 {
                     _context.Categories.Remove(category);
                 }
-            };
-            _context.SaveChanges();
-            return Ok();
+                else
+                {
+                    return new Result()
+                    {
+                        Notification = new Notification()
+                        {
+                            Message = $"failed:  category with id = {id} not found",
+                            Status = NotificationStatus.Error,
+                            Title = "couldn't deleted"
+                        }
+                    };
+                };
+            }
+            try
+            {
+                await _context.SaveChangesAsync();
+                return new Result()
+                {
+                    Notification = new Notification()
+                    {
+                        Message = "selected categories deleted successfully",
+                        Status = NotificationStatus.Success,
+                        Title = "successfully deleted"
+                    }
+                };
+
+            }
+            catch (Exception ex)
+            {
+                throw new NotFoundException("Failed to deletete selected categories");
+            }
 
         }
 

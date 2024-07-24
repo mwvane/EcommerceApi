@@ -1,10 +1,16 @@
-﻿namespace EcommerceApp.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace EcommerceApp.Models
 {
     public class Option
     {
         public int OptionId { get; set; }
+
+        [StringLength(100, MinimumLength = 2)]
         public string Name { get; set; }
+        [Required]
         public string Value { get; set; }
+        [Required]
         public int OptionTypeId { get; set; }
         public OptionType OptionType { get; set; }
         public ICollection<ProductOption> ProductOptions { get; set; }

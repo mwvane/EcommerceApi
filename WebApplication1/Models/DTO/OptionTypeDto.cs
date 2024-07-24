@@ -1,8 +1,10 @@
-﻿namespace EcommerceApp.Models.DTO
+﻿using EcommerceApp.Interfaces;
+
+namespace EcommerceApp.Models.DTO
 {
-    public class OptionTypeDto
+    public class OptionTypeDto : IEntity
     {
-        public int OptionTypeId { get; set; }
+        public int Id { get; set; }
         public string Name { get; set; }
         public ICollection<Option>? Options { get; set; }
     }

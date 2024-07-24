@@ -1,4 +1,5 @@
-﻿using EcommerceApp.ErrorHandling;
+﻿using EcommerceApp.Data;
+using EcommerceApp.ErrorHandling;
 using EcommerceApp.Models;
 using EcommerceApp.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
@@ -102,7 +103,7 @@ namespace EcommerceApp.Controllers
                     Data = newManufacturer,
                     Notification = new Notification()
                     {
-                        Message = $"manufacturer {action.ToString()}d successfully",
+                        Message = $"manufacturer with name '{manufacturer.Name.ToUpper()}' {action.ToString()}d successfully",
                         Title = "successfully added",
                         Status = NotificationStatus.Success,
                     }

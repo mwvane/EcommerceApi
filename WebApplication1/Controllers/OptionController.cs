@@ -3,6 +3,8 @@ using EcommerceApp.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EcommerceApp.ErrorHandling;
+using EcommerceApp.Data;
+using EcommerceApp.Services;
 
 namespace EcommerceApp.Controllers
 {
@@ -11,77 +13,43 @@ namespace EcommerceApp.Controllers
     public class OptionController : Controller
     {
         private readonly Context _context;
-        public OptionController(Context context)
+        private readonly IOptionService _optionService;
+        private readonly IOptionTypeService _optionTypeService;
+        public OptionController(Context context, IOptionService optionService, IOptionTypeService optionTypeService)
         {
             _context = context;
+            _optionService = optionService;
+            _optionTypeService = optionTypeService;
         }
 
         [HttpGet("GetOptionById/{id}")]
-        public async Task<IActionResult> GetOptionById(int id)
+        public async Task<Result> GetOptionById(int id)
         {
-            var option = await _context.Options.
-                Select(o => new OptionDto
-                {
-                    OptionId = o.OptionId,
-                    Name = o.Name,
-                    OptionTypeId = o.OptionTypeId,
-                    Value = o.Value
-
-                }).SingleOrDefaultAsync(c => c.OptionId == id);
-            if (option != null)
-            {
-                return Ok(option);
-            }
-            else
-            {
-                throw new ItemNotFoundException($"option with ID {id} not found");
-            }
+            var result = await _optionService.GetItemByIdAsync(id);
+            return new Result() { Data = result };
         }
 
         [HttpGet("GetOptionTypeById/{id}")]
         public async Task<Result> GetOptionTypeById(int id)
         {
-            var optionType = await _context.OptionsTypes.
-                Select(o => new OptionTypeDto
-                {
-                    Name = o.Name,
-                    OptionTypeId = o.OptionTypeId,
-                }).SingleOrDefaultAsync(o => o.OptionTypeId == id);
-            if (optionType != null)
+            var result = await _optionTypeService.GetItemByIdAsync(id);
+            return new Result()
             {
-                return new Result()
-                {
-                    Data = optionType,
-                    Success = "true"
-                };
-            }
-            else
-            {
-                throw new ItemNotFoundException($"option type with ID {id} not found");
-            }
+                Data = result
+            };
         }
 
         [HttpGet("GetOptions")]
-        public Result GetOptions()
+        public async Task<Result> GetOptions()
         {
-            var data = _context.Options.Include(ot => ot.OptionType).Select(o => new OptionDto
-            {
-                OptionId = o.OptionId,
-                Name = $"{o.Name} ({o.Value} )",
-                Value = o.Value,
-                OptionType = o.OptionType
-            });
+            var data = await _optionService.GetAllItemsAsync();
             return new Result() { Data = data };
         }
 
         [HttpGet("GetOptionTypes")]
-        public Result GetOptionTypes()
+        public async Task<Result> GetOptionTypes()
         {
-            var data = _context.OptionsTypes.Select(o => new
-            {
-                Id = o.OptionTypeId,
-                o.Name,
-            });
+            var data = await _optionTypeService.GetAllItemsAsync();
             return new Result() { Data = data };
         }
 
@@ -101,97 +69,64 @@ namespace EcommerceApp.Controllers
 
                 };
             }
-            var optionToSave = new Option()
+            var result = await _optionService.AddItemAsync(option);
+            if (result != null)
             {
-                OptionId = option.OptionId,
-                Name = option.Name,
-                OptionTypeId = option.OptionTypeId,
-                Value = option.Value,
-            };
-            try
-            {
-                if (action == CRUD_Action.Create)
-                {
-                    await _context.Options.AddAsync(optionToSave);
-                    await _context.SaveChangesAsync();
-                }
-                else if (action == CRUD_Action.Update)
-                {
-                    _context.Options.Update(optionToSave);
-                    await _context.SaveChangesAsync();
-                }
-
                 return new Result()
                 {
-                    Data = optionToSave,
+                    Data = result,
                     Notification = new Notification()
                     {
-                        Message = $"option successfully {action.ToString()}d ",
+                        Message = $"option with name '{option.Name.ToUpper()}' successfully created ",
                         Status = NotificationStatus.Success,
-                        Title = $"successfully {action.ToString()}d"
+                        Title = $"successfully created"
                     }
                 };
             }
-            catch (Exception ex)
+            else
             {
-                throw new Exception($"faild to {action.ToString()} option" + ex.Message);
+                return new Result()
+                {
+                    Data = result,
+                    Notification = new Notification()
+                    {
+                        Message = $"option with name '{option.Name.ToUpper()}' not saved",
+                        Status = NotificationStatus.Error,
+                        Title = $"not saved"
+                    }
+                };
             }
         }
 
         [HttpPost("AddOptionType")]
         public async Task<Result> AddOptionType([FromBody] OptionTypeDto optionType, CRUD_Action action = CRUD_Action.Create)
         {
-            if (_context.OptionsTypes.Any(o => o.Name.ToLower() == optionType.Name.ToLower()))
-            {
-                return new Result()
-                {
-                    Notification = new Notification()
-                    {
-                        Message = "option type already exists",
-                        Status = NotificationStatus.Warning,
-                        Title = "already exists"
-                    }
 
-                };
-            }
-            var newOptionType = new OptionType()
+            var result = await _optionTypeService.AddItemAsync(optionType);
+            return new Result()
             {
-                OptionTypeId = optionType.OptionTypeId,
-                Name = optionType.Name,
+                Data = result,
+                Notification = new Notification()
+                {
+                    Message = $"option type successfully created",
+                    Status = NotificationStatus.Success,
+                    Title = "successfully created"
+                }
             };
-            try
-            {
-                if (action == CRUD_Action.Create)
-                {
-                    await _context.OptionsTypes.AddAsync(newOptionType);
-                }
-                else if (action == CRUD_Action.Update)
-                {
-                    _context.OptionsTypes.Update(newOptionType);
-                }
-                await _context.SaveChangesAsync();
-
-                return new Result()
-                {
-                    Data = newOptionType,
-                    Notification = new Notification()
-                    {
-                        Message = $"option type successfully {action.ToString()}d ",
-                        Status = NotificationStatus.Success,
-                        Title = $"successfully {action.ToString()}d"
-                    }
-                };
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"faild to {optionType.ToString} option type : " + ex.Message);
-            }
         }
         [HttpPut("UpdateOption")]
         public async Task<Result> UpdateOption([FromBody] OptionDto option)
         {
-            var result = await AddOption(option, CRUD_Action.Update);
-            return result;
+            await _optionService.UpdateItemAsync(option);
+            return new Result()
+            {
+                Notification = new Notification()
+                {
+                    Message = $"option successfully updated",
+                    Status = NotificationStatus.Success,
+                    Title = "successfuly updated"
+                }
+            };
         }
 
         [HttpPut("UpdateOptionType")]
@@ -205,27 +140,8 @@ namespace EcommerceApp.Controllers
         [HttpDelete("DeleteOption")]
         public async Task<Result> DeleteOption([FromBody] List<int> optionIds)
         {
-            foreach (var id in optionIds)
-            {
-                var option = await _context.Options.FindAsync(id);
-                if (option != null)
-                {
-                    _context.Options.Remove(option);
-                }
-                else
-                {
-                    return new Result()
-                    {
-                        Notification = new Notification()
-                        {
-                            Message = $"slected options Couldn't deleted . option with id = {id} not found",
-                            Status = NotificationStatus.Error,
-                            Title = "Couldn't delete"
-                        },
-                    };
-                }
-            };
-            await _context.SaveChangesAsync();
+
+            await _optionService.DeleteItemAsync(optionIds);
             return new Result()
             {
                 Notification = new Notification()
