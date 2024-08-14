@@ -1,24 +1,30 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
 using System.Text.Json.Serialization;
 using EcommerceApp.ErrorHandling;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using EcommerceApp.Data;
-using EcommerceApp.Repositories;
-using EcommerceApp.Services;
-using EcommerceApp.Interfaces;
+using Ecommerce.Infrastructure.Data;
+using Ecommerce.Core.Interfaces;
+using Ecommerce.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
-builder.Services.AddDbContext<Context>(options =>
+builder.Services.AddDbContext<Ecommerce.Infrastructure.Data.Context>(options =>
    options.UseSqlServer(builder.Configuration.GetConnectionString("context")));
+
+builder.Services.AddScoped<Ecommerce.Infrastructure.Data.Context>();
+
 builder.Services.AddScoped<IOptionRepository, OptionRepository>();
-builder.Services.AddScoped<IOptionService, OptionService>();
+builder.Services.AddScoped<OptionService>();
 builder.Services.AddScoped<IOptionTypeRepository, OptionTypeRepository>();
-builder.Services.AddScoped<IOptionTypeService, OptionTypeService>();
+builder.Services.AddScoped<OptionTypeService>();
+builder.Services.AddScoped<ICountryRepository, CountryRepository>();
+builder.Services.AddScoped<CountryService>();
+builder.Services.AddScoped<IManufacturerRepository, ManufacturerRepository>();
+builder.Services.AddScoped<ManufacturerService>();
+
 
 builder.Services.AddControllers().AddJsonOptions(
             options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles
@@ -74,11 +80,11 @@ app.UseAuthorization();
 app.UseCors("corspolicy");
 app.UseMiddleware<ErrorHandlerMiddleware>();
 app.MapControllers();
-app.UseStaticFiles(new StaticFileOptions()
-{
-    FileProvider = new PhysicalFileProvider(
-                           Path.Combine(Directory.GetCurrentDirectory(), @"Resources")),
-    RequestPath = new PathString("/Resources")
-});
+//app.UseStaticFiles(new StaticFileOptions()
+//{
+//    FileProvider = new PhysicalFileProvider(
+//                           Path.Combine(Directory.GetCurrentDirectory(), @"Resources")),
+//    RequestPath = new PathString("/Resources")
+//});
 
 app.Run();

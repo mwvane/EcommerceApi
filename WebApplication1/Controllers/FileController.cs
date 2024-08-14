@@ -1,5 +1,4 @@
-﻿using EcommerceApp.Data;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Net.Http.Headers;
 
@@ -9,11 +8,11 @@ namespace EcommerceApp.Controllers
     [ApiController]
     public class FileController : Controller
     {
-        private readonly Context _context;
-        public FileController(Context context)
-        {
-            _context = context;
-        }
+        //private readonly Context _context;
+        //public FileController(Context context)
+        //{
+        //    _context = context;
+        //}
 
         //[HttpPost("UploadProductImage"), DisableRequestSizeLimit]
         //public Result UploadProductImage([FromForm] UploadFile file)

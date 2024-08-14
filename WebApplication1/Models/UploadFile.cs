@@ -1,4 +1,6 @@
-﻿namespace EcommerceApp.Models
+﻿using EcommerceApp;
+
+namespace Ecommerce.Api.Models
 {
     public class UploadFile
     {

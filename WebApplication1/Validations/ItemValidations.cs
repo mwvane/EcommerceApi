@@ -1,4 +1,4 @@
-﻿using EcommerceApp.Data;
+﻿using Ecommerce.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 

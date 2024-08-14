@@ -1,4 +1,8 @@
-﻿using EcommerceApp.Data;
+﻿using Ecommerce.Api.Extensions;
+using Ecommerce.Api.Models;
+using Ecommerce.Api.Notifications;
+using Ecommerce.Application.Services;
+using Ecommerce.Core.Entities;
 using EcommerceApp.ErrorHandling;
 using EcommerceApp.Models;
 using EcommerceApp.Models.DTO;
@@ -11,64 +15,95 @@ namespace EcommerceApp.Controllers
     [ApiController]
     public class CountryController : Controller
     {
-        private readonly Context _context;
-        public CountryController(Context context)
+        private readonly CountryService _countryService;
+        public CountryController(CountryService countryService)
         {
-            _context = context;
+           _countryService = countryService;
         }
         [HttpGet("GetCountries")]
-        public Result GetCountries()
+        public async Task<Response> GetCountries()
         {
-            var data = _context.Countries.Select(c => new CountryDto()
+            var countries = await _countryService.GetAllAsync();
+            if (countries != null)
             {
-                Id = c.CountryId,
-                Name = c.Name,
-                Image = c.Image
-            });
-            return new Result() { Data = data };
+                var countryDtos = countries.ToCountryDtoList();
+                return new Response() { Data = countryDtos };
+            }
+            return new Response() { };
         }
 
-        [HttpDelete("DeleteCountry")]
-        public async Task<Result> DeleteCountry([FromBody] List<int> countryIds)
+        [HttpGet("GetCountryById/{id}")]
+        public async Task<Response> GetCountryById(int id)
         {
-            foreach (var id in countryIds)
+            var country = await _countryService.GetByIdAsync(id);
+            if (country != null)
             {
-                var country = await _context.Countries.FindAsync(id);
-                if (country != null)
-                {
-                    _context.Countries.Remove(country);
-                }
-                else
-                {
-                    return new Result()
-                    {
-                        Notification = new Notification()
-                        {
-                            Message = $"failed:  country with id = {id} not found",
-                            Status = NotificationStatus.Error,
-                            Title = "couldn't deleted"
-                        }
-                    };
-                };
+                var countryDto = country.ToCountryDto();
+                return new Response() { Data = countryDto};
             }
-            try
+            return new Response() { };
+        }
+
+        [HttpGet("UpdateCountry")]
+        public async Task<Response> UpdateCountry([FromBody] Country country)
+        {
+            var result = await _countryService.UpdateAsync(country);
+            if (result)
             {
-                await _context.SaveChangesAsync();
-                return new Result()
+                return new Response()
                 {
                     Notification = new Notification()
                     {
-                        Message = "selected countries deleted successfully",
+                        Message = "successfully updated",
                         Status = NotificationStatus.Success,
-                        Title = "successfully deleted"
+                        Title = NotificationStatus.Success.ToString()
                     }
                 };
-
             }
-            catch (Exception ex)
-            {
-                throw new NotFoundException("Failed to deletete selected countries");
-            }
+            return new Response() { };
         }
+
+        //[HttpDelete("DeleteCountry")]
+        //public async Task<Result> DeleteCountry([FromBody] List<int> countryIds)
+        //{
+        //    foreach (var id in countryIds)
+        //    {
+        //        var country = await _context.Countries.FindAsync(id);
+        //        if (country != null)
+        //        {
+        //            _context.Countries.Remove(country);
+        //        }
+        //        else
+        //        {
+        //            return new Result()
+        //            {
+        //                Notification = new Notification()
+        //                {
+        //                    Message = $"failed:  country with id = {id} not found",
+        //                    Status = NotificationStatus.Error,
+        //                    Title = "couldn't deleted"
+        //                }
+        //            };
+        //        };
+        //    }
+        //    try
+        //    {
+        //        await _context.SaveChangesAsync();
+        //        return new Result()
+        //        {
+        //            Notification = new Notification()
+        //            {
+        //                Message = "selected countries deleted successfully",
+        //                Status = NotificationStatus.Success,
+        //                Title = "successfully deleted"
+        //            }
+        //        };
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new NotFoundException("Failed to deletete selected countries");
+        //    }
+        //}
     }
 }
