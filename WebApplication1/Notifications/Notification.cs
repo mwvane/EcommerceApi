@@ -15,13 +15,23 @@ namespace Ecommerce.Api.Notifications
     }
     public static class DefaultNotifications
     {
-        public static  Notification SuccessfullyCreate<T>() where T : class
+        public static  Notification Success<T>(CRUD_Action crudAction) where T : class
         {
             return new Notification()
             {
-                Message = $"{typeof(T).Name} successfully created",
+                Message = $"{typeof(T).Name} successfully {crudAction.ToString()}d",
                 Title = NotificationStatus.Success.ToString(),
                 Status = NotificationStatus.Success,
+            };
+        }
+
+        public static Notification Error<T>(CRUD_Action crudAction) where T : class
+        {
+            return new Notification()
+            {
+                Message = $"{typeof(T).Name} couldn't {crudAction.ToString()}d, try again",
+                Title = NotificationStatus.Error.ToString(),
+                Status = NotificationStatus.Error,
             };
         }
     }

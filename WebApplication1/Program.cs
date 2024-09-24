@@ -7,12 +7,15 @@ using System.Text;
 using Ecommerce.Infrastructure.Data;
 using Ecommerce.Core.Interfaces;
 using Ecommerce.Application.Services;
+using Ecommerce.Api.Mapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddDbContext<Ecommerce.Infrastructure.Data.Context>(options =>
    options.UseSqlServer(builder.Configuration.GetConnectionString("context")));
+
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 builder.Services.AddScoped<Ecommerce.Infrastructure.Data.Context>();
 
@@ -24,6 +27,9 @@ builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<CountryService>();
 builder.Services.AddScoped<IManufacturerRepository, ManufacturerRepository>();
 builder.Services.AddScoped<ManufacturerService>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<CategoryService>();
+
 
 
 builder.Services.AddControllers().AddJsonOptions(
@@ -37,10 +43,14 @@ builder.Services.AddHttpContextAccessor();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddCors(p => p.AddPolicy("corspolicy", build =>
+builder.Services.AddCors(options =>
 {
-    build.WithOrigins("*").AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-}));
+    options.AddPolicy("AllowAll",
+            builder => builder
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader());
+});
 
 // JWT Authentication Configuration
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -77,7 +87,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseCors("corspolicy");
+app.UseCors("AllowAll");
 app.UseMiddleware<ErrorHandlerMiddleware>();
 app.MapControllers();
 //app.UseStaticFiles(new StaticFileOptions()

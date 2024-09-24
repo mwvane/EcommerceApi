@@ -1,6 +1,8 @@
 ﻿using Ecommerce.Api.Extensions;
 using Ecommerce.Api.Models;
+using Ecommerce.Api.Notifications;
 using Ecommerce.Application.Services;
+using Ecommerce.Core.Entities;
 using EcommerceApp.ErrorHandling;
 using EcommerceApp.Models;
 using EcommerceApp.Models.DTO;
@@ -18,35 +20,18 @@ namespace EcommerceApp.Controllers
         {
             _manufacturerService = manufacturerService;
         }
-        //[HttpGet("GetManufacturerById/{id}")]
-        //public async Task<Result> GetManufacturerById(int id)
-        //{
-        //    var manufacturer = await _context.Manufacturers.
-        //        Include(c => c.Country).
-        //        Select(m => new ManufacturerDto
-        //        {
-        //            Id = m.ManufacturerId,
-        //            Name = m.Name,
-        //            Country = new CountryDto
-        //            {
-        //                Id = m.Country.CountryId,
-        //                Image = m.Country.Image,
-        //                Name = m.Country.Name
-        //            }
-        //        }).SingleOrDefaultAsync(c => c.Id == id);
-        //    if (manufacturer != null)
-        //    {
-        //        return new Result()
-        //        {
-        //            Data = manufacturer,
-        //            Success = "true"
-        //        };
-        //    }
-        //    else
-        //    {
-        //        throw new NotFoundException($"manufacturer with id {id} not found");
-        //    }
-        //}
+        [HttpGet("GetManufacturerById/{id}")]
+        public async Task<Response> GetManufacturerById(int id)
+        {
+            var manufacturer =await _manufacturerService.GetByIdAsync(id);
+            if (manufacturer != null) {
+                return new Response()
+                {
+                    Data = manufacturer
+                };
+            }
+            throw new NotFoundException($"Manufacturer with ID '{id}' not found");
+        }
 
         [HttpGet("GetManufacturers")]
         public async Task<Response> GetManufacturers()
@@ -58,109 +43,72 @@ namespace EcommerceApp.Controllers
             };
         }
 
-        //[HttpPost("AddManufacturer")]
-        //public async Task<Result> AddManufacturer([FromBody] ManufacturerDto manufacturer, CRUD_Action action = CRUD_Action.Create)
-        //{
-        //    if (_context.Manufacturers.Any(m => m.Name == manufacturer.Name))
-        //    {
-        //        return new Result()
-        //        {
-        //            Notification = new Notification()
-        //            {
-        //                Message = $"manufacturer with name '{manufacturer.Name}' already exists",
-        //                Status = NotificationStatus.Warning,
-        //                Title = "already exists"
-        //            }
-        //        };
-        //    }
-        //    var newManufacturer = new Manufacturer()
-        //    {
-        //        ManufacturerId = manufacturer.Id,
-        //        CountryId = manufacturer.Country.Id,
-        //        Name = manufacturer.Name
-        //    };
-        //    try
-        //    {
-        //        if (action == CRUD_Action.Create)
-        //        {
-        //            await _context.Manufacturers.AddAsync(newManufacturer);
-        //        }
-        //        else if (action == CRUD_Action.Update)
-        //        {
-        //            _context.Manufacturers.Update(newManufacturer);
-        //        }
-        //        await _context.SaveChangesAsync();
-        //        return new Result()
-        //        {
-        //            Data = newManufacturer,
-        //            Notification = new Notification()
-        //            {
-        //                Message = $"manufacturer with name '{manufacturer.Name.ToUpper()}' {action.ToString()}d successfully",
-        //                Title = "successfully added",
-        //                Status = NotificationStatus.Success,
-        //            }
-        //        };
+        [HttpPost("AddManufacturer")]
+        public async Task<Response> AddManufacturer([FromBody] ManufacturerDto manufacturerDto, CRUD_Action action = CRUD_Action.Create)
+        {
+            var manufacturer = manufacturerDto.ToManufacturer();
+            if (manufacturer != null)
+            {
+                var result = await _manufacturerService.AddAsync(manufacturer);
+                return new Response()
+                {
+                    Data = result.ToManufacturerDto(),
+                    Notification = DefaultNotifications.Success<Manufacturer>(CRUD_Action.Create)
+                };
+            }
 
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return new Result() {Notification = new Notification() { 
-        //            Message  = $"faild to {action.ToString()} manufacturer",
-        //            Status = NotificationStatus.Error,
-        //            Title = "Error",
-        //        } };
-        //    }
 
-        //}
+            return new Response()
+            {
+                Notification = DefaultNotifications.Error<Manufacturer>(CRUD_Action.Create)
+            };
+        }
 
-        //[HttpPut("UpdateManufacturer")]
-        //public async Task<Result> UpdateManufacturer([FromBody] ManufacturerDto manufacturer)
-        //{
-        //    var result =  await AddManufacturer(manufacturer, CRUD_Action.Update);
-        //    return result;
 
-        //}
 
-        //[HttpDelete("DeleteManufacturer")]
-        //public async Task<Result> DeleteManufacturer([FromBody] List<int> manufacturerIds)
-        //{
-        //    foreach (var id in manufacturerIds)
-        //    {
-        //        var manufacturer = await _context.Manufacturers.FindAsync(id);
-        //        if (manufacturer != null)
-        //        {
-        //            _context.Manufacturers.Remove(manufacturer);
-        //        }
-        //        else
-        //        {
-        //            return new Result()
-        //            {
-        //                Notification = new Notification()
-        //                {
-        //                    Message = $"slected manufacturer couldn't deleted . manufacturer with id = {id} not found",
-        //                    Status = NotificationStatus.Error,
-        //                    Title = "Couldn't delete"
-        //                },
-        //            };
-        //        }
-        //    };
-        //    try
-        //    {
-        //        await _context.SaveChangesAsync();
-        //        return new Result()
-        //        {
-        //            Notification = new Notification()
-        //            {
-        //                Message = $"manufacturer deleted successfully",
-        //                Status = NotificationStatus.Success,
-        //                Title = "successfully deleted"
-        //            },
-        //        };
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw new Exception("somthing went wrong! : " + ex.Message);
-        //    }
-        //}
+        [HttpPut("UpdateManufacturer")]
+        public async Task<Response> UpdateManufacturer([FromBody] ManufacturerDto manufacturerDto)
+        {
+            var manufacturer = manufacturerDto.ToManufacturer();
+            var error = new Response()
+            {
+                Notification = DefaultNotifications.Success<Manufacturer>(CRUD_Action.Update)
+            };
+
+            if (manufacturer != null)
+            {
+                var result = await _manufacturerService.UpdateAsync(manufacturer);
+                if (result)
+                {
+                    return new Response()
+                    {
+                        Data = manufacturerDto,
+                        Notification = DefaultNotifications.Success<Manufacturer>(CRUD_Action.Update)
+                    };
+                }
+                return error;
+            }
+            return error;
+
+        }
+
+        [HttpDelete("DeleteManufacturer")]
+        public async Task<Response> DeleteManufacturer([FromBody] List<int> manufacturerIds)
+        {
+            var result = await _manufacturerService.DeleteAsync(manufacturerIds);
+            if (result)
+            {
+                return new Response()
+                {
+                    Notification = DefaultNotifications.Success<Manufacturer>(CRUD_Action.Delete)
+                };
+            }
+            return new Response()
+            {
+                Notification = DefaultNotifications.Error<Manufacturer>(CRUD_Action.Delete)
+            };
+
+        }
     }
 }
+

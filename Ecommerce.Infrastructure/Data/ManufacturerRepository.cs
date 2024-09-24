@@ -11,39 +11,79 @@ namespace Ecommerce.Infrastructure.Data
 {
     public class ManufacturerRepository : IManufacturerRepository
     {
-        private readonly Context _contex;
+        private readonly Context _context;
         public ManufacturerRepository(Context context)
         {
-            _contex = context;
+            _context = context;
         }
-        public Task<Manufacturer?> AddAsync(Manufacturer entity)
+        public async  Task<Manufacturer?> AddAsync(Manufacturer entity)
         {
-            throw new NotImplementedException();
+            try
+            {
+                await _context.Manufacturers.AddAsync(entity);
+                await _context.SaveChangesAsync();
+                return await GetByIdAsync(entity.Id);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error ocurred during create Manufacturer");
+            }
+           
         }
 
-        public Task<bool> DeleteAsync(List<int> ids)
+        public async Task<bool> DeleteAsync(List<int> ids)
         {
-            throw new NotImplementedException();
+            try
+            {
+                foreach (var id in ids)
+                {
+                    var manufacturer = await _context.Manufacturers.Where(m => m.Id == id).FirstOrDefaultAsync();
+                    if (manufacturer != null)
+                    {
+                        _context.Manufacturers.Remove(manufacturer);
+                    }
+                    else
+                    {
+                        throw new Exception($"manufacturer with ID - '{id}' not found");
+                    }
+
+                }
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"An error occured! manufacturer couldn't deleted. Try again");
+            }
         }
 
         public async Task<ICollection<Manufacturer>> GetAllAsync()
         {
-            return await _contex.Manufacturers.Include(c => c.Country).ToListAsync();
+            return await _context.Manufacturers.Include(c => c.Country).ToListAsync();
         }
 
-        public Task<Manufacturer?> GetByIdAsync(int id)
+        public async Task<Manufacturer?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _context.Manufacturers.Include(m => m.Country).Where(m => m.Id == id).FirstOrDefaultAsync();
         }
 
-        public Task<bool> ManufacturerNameExistsAsync(string name)
+        public async Task<bool> ManufacturerNameExistsAsync(string name)
         {
-            throw new NotImplementedException();
+            return await _context.Manufacturers.AnyAsync(o => o.Name == name);
         }
 
-        public Task<bool> UpdateAsync(Manufacturer entity)
+        public async Task<bool> UpdateAsync(Manufacturer entity)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _context.Manufacturers.Update(entity);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception e)
+            {
+                throw new Exception("an error occurred");
+            }
         }
     }
 }

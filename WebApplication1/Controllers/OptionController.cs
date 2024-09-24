@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using EcommerceApp.ErrorHandling;
 using Ecommerce.Application.Services;
 using Ecommerce.Api.Models;
-using EcommerceApp.Extensions;
 using Ecommerce.Api.Notifications;
 using Ecommerce.Core.Entities;
 using Ecommerce.Api.Extensions;
+using AutoMapper;
 
 namespace EcommerceApp.Controllers
 {
@@ -16,10 +16,12 @@ namespace EcommerceApp.Controllers
     {
         private readonly OptionService _optionService;
         private readonly OptionTypeService _optionTypeService;
-        public OptionController(OptionService optionService, OptionTypeService optionTypeService)
+        private readonly IMapper _mapper;
+        public OptionController(OptionService optionService, OptionTypeService optionTypeService, IMapper mapper)
         {
             _optionService = optionService;
             _optionTypeService = optionTypeService;
+            _mapper = mapper;
         }
 
         [HttpGet("GetOptionById/{id}")]
@@ -47,37 +49,29 @@ namespace EcommerceApp.Controllers
         public async Task<Response> GetOptions()
         {
             var data = await _optionService.GetAllAsync();
-            return new Response() { Data = data.ToOptionDto() };
+            return new Response() { Data = _mapper.Map<List<OptionDto>>(data) };
         }
 
         [HttpGet("GetOptionTypes")]
         public async Task<Response> GetOptionTypes()
         {
             var data = await _optionTypeService.GetAllOptionTypes();
-            return new Response() { Data = data };
+            return new Response() { Data = _mapper.Map<List<OptionTypeDto>>(data) };
         }
 
         [HttpPost("AddOption")]
         public async Task<Response> AddOption([FromBody] OptionDto option)
         {
-            var convertedOption = option.ToOption();
-            var notCreatedNotification = new Response();
+            var notCreatedNotification = new Response() { Notification = DefaultNotifications.Error<Option>(CRUD_Action.Create) };
 
-            if (convertedOption != null)
+            var result = await _optionService.AddAsync(_mapper.Map<Option>(option));
+            if (result != null)
             {
-                var result = await _optionService.AddAsync(convertedOption);
-                if(result != null)
+                return new Response()
                 {
-                    return new Response()
-                    {
-                        Data = result,
-                        Notification = DefaultNotifications.SuccessfullyCreate<Option>()
-                    };
-                }
-                else
-                {
-                    return notCreatedNotification;
-                }
+                    Data = _mapper.Map<OptionDto>(result),
+                    Notification = DefaultNotifications.Success<Option>(CRUD_Action.Create)
+                };
             }
             return notCreatedNotification;
         }
@@ -85,67 +79,33 @@ namespace EcommerceApp.Controllers
         [HttpPost("AddOptionType")]
         public async Task<Response> AddOptionType([FromBody] OptionTypeDto optionTypeDto)
         {
-            var optionType = optionTypeDto.ToOptionType();
-            if(optionType != null)
+            var notCreatedNotification = new Response() { Notification = DefaultNotifications.Error<OptionType>(CRUD_Action.Create) };
+            var result = await _optionTypeService.AddAsync(_mapper.Map<OptionType>(optionTypeDto));
+            if (result != null)
             {
-                var result = await _optionTypeService.AddAsync(optionType);
-                if(result != null)
-                {
-                    return new Response()
-                    {
-                        Data = result,
-                        Notification = new Notification()
-                        {
-                            Message = $"option type successfully created",
-                            Status = NotificationStatus.Success,
-                            Title = "successfully created"
-                        }
-                    };
-                }
                 return new Response()
                 {
-                    Notification = new Notification()
-                    {
-                        Message = $"option type could't created",
-                        Status = NotificationStatus.Error,
-                        Title = "Error"
-                    }
+                    Data = optionTypeDto,
+                    Notification = DefaultNotifications.Success<OptionType>(CRUD_Action.Create),
                 };
             }
-            else
-            {
-                throw new Exception("Option type could not created");
-            }
+            return notCreatedNotification;
         }
 
         [HttpPut("UpdateOption")]
         public async Task<Response> UpdateOption([FromBody] OptionDto optionDto)
         {
-            var option = optionDto.ToOption();
-            if (option != null)
+            var result = await _optionService.UpdateAsync(_mapper.Map<Option>(optionDto));
+            if (result)
             {
-                var result = await _optionService.UpdateAsync(option);
-                if (result)
+                return new Response()
                 {
-                    return new Response()
-                    {
-                        Notification = new Notification()
-                        {
-                            Title = NotificationStatus.Success.ToString(),
-                            Message = "Uodated",
-                            Status = NotificationStatus.Success
-                        }
-                    };
-                }
+                    Notification = DefaultNotifications.Success<Option>(CRUD_Action.Update)
+                };
             }
             return new Response()
             {
-                Notification = new Notification()
-                {
-                    Message = $"option not updated",
-                    Status = NotificationStatus.Error,
-                    Title = "error"
-                }
+                Notification = DefaultNotifications.Error<Option>(CRUD_Action.Update)
             };
         }
 
@@ -153,31 +113,21 @@ namespace EcommerceApp.Controllers
         public async Task<Response> UpdateOptionType([FromBody] OptionTypeDto optionTypeDto)
         {
             var optionType = optionTypeDto.ToOptionType();
-            if(optionType != null)
+            if (optionType != null)
             {
                 var result = await _optionTypeService.UpdateAsync(optionType);
                 if (result)
                 {
                     return new Response()
                     {
-                        Notification = new Notification()
-                        {
-                            Title = NotificationStatus.Success.ToString(),
-                            Message = "option type updated successfuly",
-                            Status = NotificationStatus.Success
-                        }
+                        Notification = DefaultNotifications.Success<OptionType>(CRUD_Action.Update)
                     };
                 }
-                
+
             }
             return new Response()
             {
-                Notification = new Notification()
-                {
-                    Title = NotificationStatus.Error.ToString(),
-                    Message = "option type couldn't updated",
-                    Status = NotificationStatus.Error
-                }
+                Notification = DefaultNotifications.Error<OptionType>(CRUD_Action.Update)
             };
 
         }
@@ -186,27 +136,17 @@ namespace EcommerceApp.Controllers
         public async Task<Response> DeleteOption([FromBody] List<int> optionIds)
         {
 
-           bool isDeleted =  await _optionService.DeleteAsync(optionIds);
+            bool isDeleted = await _optionService.DeleteAsync(optionIds);
             if (isDeleted)
             {
                 return new Response()
                 {
-                    Notification = new Notification()
-                    {
-                        Message = $"slected options successfully deleted",
-                        Status = NotificationStatus.Success,
-                        Title = "succesfully deleted"
-                    }
+                    Notification = DefaultNotifications.Success<Option>(CRUD_Action.Delete)
                 };
             }
             return new Response()
             {
-                Notification = new Notification()
-                {
-                    Message = $"slected options couldn't deleted",
-                    Status = NotificationStatus.Error,
-                    Title = "Error"
-                }
+                Notification = DefaultNotifications.Error<Option>(CRUD_Action.Delete)
             };
 
         }
@@ -219,22 +159,12 @@ namespace EcommerceApp.Controllers
             {
                 return new Response()
                 {
-                    Notification = new Notification()
-                    {
-                        Message = $"slected option types successfully deleted",
-                        Status = NotificationStatus.Success,
-                        Title = "succesfully deleted"
-                    }
+                    Notification = DefaultNotifications.Success<OptionType>(CRUD_Action.Delete)
                 };
             }
             return new Response()
             {
-                Notification = new Notification()
-                {
-                    Message = $"somting went wrong during delete selected option types",
-                    Status = NotificationStatus.Error,
-                    Title = "error"
-                }
+                Notification = DefaultNotifications.Error<OptionType>(CRUD_Action.Delete)
             };
 
         }

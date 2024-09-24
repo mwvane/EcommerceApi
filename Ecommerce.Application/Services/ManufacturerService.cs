@@ -15,14 +15,25 @@ namespace Ecommerce.Application.Services
         {
             _manuffacurerRepository = manufacturerRepository;
         }
-        public Task<Manufacturer?> AddAsync(Manufacturer entity)
+        public async Task<Manufacturer?> AddAsync(Manufacturer entity)
         {
-            throw new NotImplementedException();
+            if (!await _manuffacurerRepository.ManufacturerNameExistsAsync(entity.Name))
+            {
+                return await _manuffacurerRepository.AddAsync(entity);
+            }
+            throw new Exception($"Manufacturer with name '{entity.Name}' already exist");
         }
 
-        public Task<bool> DeleteAsync(List<int> ids)
+        public async Task<bool> DeleteAsync(List<int> ids)
         {
-            throw new NotImplementedException();
+            if (ids.Count > 0)
+            {
+                return await _manuffacurerRepository.DeleteAsync(ids);
+            }
+            else
+            {
+                throw new Exception("Given ids is empty");
+            }
         }
 
         public async Task<ICollection<Manufacturer>> GetAllAsync()
@@ -30,14 +41,14 @@ namespace Ecommerce.Application.Services
             return await _manuffacurerRepository.GetAllAsync();
         }
 
-        public Task<Manufacturer?> GetByIdAsync(int id)
+        public async Task<Manufacturer?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return  await _manuffacurerRepository.GetByIdAsync(id);
         }
 
-        public Task<bool> UpdateAsync(Manufacturer entity)
+        public async Task<bool> UpdateAsync(Manufacturer entity)
         {
-            throw new NotImplementedException();
+            return await _manuffacurerRepository.UpdateAsync(entity);
         }
     }
 }

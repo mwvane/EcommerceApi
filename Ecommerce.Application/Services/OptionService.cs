@@ -27,6 +27,7 @@ namespace Ecommerce.Application.Services
 
         public async Task<Option?> AddAsync(Option entity)
         {
+            entity.OptionType = null;
             if (!await _optionRepository.OptionNameExistsAsync(entity.Name))
             {
                 return await _optionRepository.AddAsync(entity);
@@ -39,6 +40,7 @@ namespace Ecommerce.Application.Services
 
         public async Task<bool> UpdateAsync(Option entity)
         {
+            entity.OptionType = null;
             if (!await _optionRepository.OptionNameExistsAsync(entity.Name))
             {
                 return await _optionRepository.UpdateAsync(entity);

@@ -69,7 +69,7 @@ namespace Ecommerce.Infrastructure.Data
 
         public async Task<Option?> GetByIdAsync(int id)
         {
-            var data = await _context.Options.FirstOrDefaultAsync(o => o.Id == id);
+            var data = await _context.Options.Include(o => o.OptionType).FirstOrDefaultAsync(o => o.Id == id);
             return data;
         }
 

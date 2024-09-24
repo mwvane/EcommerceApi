@@ -52,12 +52,7 @@ namespace EcommerceApp.Controllers
             {
                 return new Response()
                 {
-                    Notification = new Notification()
-                    {
-                        Message = "successfully updated",
-                        Status = NotificationStatus.Success,
-                        Title = NotificationStatus.Success.ToString()
-                    }
+                    Notification = DefaultNotifications.Success<Country>(CRUD_Action.Update)
                 };
             }
             return new Response() { };

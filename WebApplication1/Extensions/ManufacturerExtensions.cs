@@ -12,7 +12,7 @@ namespace Ecommerce.Api.Extensions
             {
                 Id = manufacturer.Id,
                 Name = manufacturer.Name,
-                Country = new CountryDto()
+                Country =  new CountryDto()
                 {
                     Id = manufacturer.Country.Id,
                     Name = manufacturer.Country.Name,
