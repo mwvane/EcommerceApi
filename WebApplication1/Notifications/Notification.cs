@@ -25,11 +25,11 @@ namespace Ecommerce.Api.Notifications
             };
         }
 
-        public static Notification Error<T>(CRUD_Action crudAction) where T : class
+        public static Notification Error<T>(CRUD_Action crudAction, string message = "") where T : class
         {
             return new Notification()
             {
-                Message = $"{typeof(T).Name} couldn't {crudAction.ToString()}d, try again",
+                Message = message == "" ? $"{typeof(T).Name} couldn't {crudAction.ToString()}d, try again" : message,
                 Title = NotificationStatus.Error.ToString(),
                 Status = NotificationStatus.Error,
             };

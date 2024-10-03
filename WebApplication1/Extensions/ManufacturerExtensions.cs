@@ -16,7 +16,7 @@ namespace Ecommerce.Api.Extensions
                 {
                     Id = manufacturer.Country.Id,
                     Name = manufacturer.Country.Name,
-                    Image = manufacturer.Country.Image,
+                    //Image = manufacturer.Country.Image,
                 }
             };
         }

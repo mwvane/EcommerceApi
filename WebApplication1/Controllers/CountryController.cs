@@ -1,6 +1,8 @@
-﻿using Ecommerce.Api.Extensions;
+﻿using AutoMapper;
+using Ecommerce.Api.Extensions;
 using Ecommerce.Api.Models;
 using Ecommerce.Api.Notifications;
+using Ecommerce.Application.DTOs;
 using Ecommerce.Application.Services;
 using Ecommerce.Core.Entities;
 using EcommerceApp.ErrorHandling;
@@ -16,18 +18,54 @@ namespace EcommerceApp.Controllers
     public class CountryController : Controller
     {
         private readonly CountryService _countryService;
-        public CountryController(CountryService countryService)
+        private readonly IMapper _mapper;
+        public CountryController(CountryService countryService, IMapper mapper)
         {
            _countryService = countryService;
+            _mapper = mapper;
         }
+
+        [HttpPost("CreateCountry")]
+        public async Task<Response> CreateCountry([FromForm] CreateCountryDto country)
+        {
+            if(country.Image.Length > 0)
+            {
+                var imagePath = await FileService.SaveImageToStorage(country.Image, UploadType.Countries);
+                var result = await _countryService.AddAsync(new Country() { Name = country.Name, Image = imagePath });
+                if(result.Id != null || result.Id != 0)
+                {
+                    return new Response() { Data = _mapper.Map<CountryDto>(result), Notification = DefaultNotifications.Success<Country>(CRUD_Action.Create) };
+                }
+                return new Response() { Notification = DefaultNotifications.Error<Country>(CRUD_Action.Create) };
+            }
+            else
+            {
+                return new Response() { Notification = DefaultNotifications.Error<Country>(CRUD_Action.Create, "You mast upload a photo") };
+            }
+
+            //if (image != null && image.Length > 0)
+            //{
+            //    var imagePath = Path.Combine("wwwroot/images", image.FileName);
+            //    using (var stream = new FileStream(imagePath, FileMode.Create))
+            //    {
+            //        await image.CopyToAsync(stream);
+            //    }
+            //    country.Image = imagePath;
+            //}
+
+            // Save country details to the database
+            // _context.Countries.Add(country);
+            // await _context.SaveChangesAsync();
+
+        }
+
         [HttpGet("GetCountries")]
         public async Task<Response> GetCountries()
         {
             var countries = await _countryService.GetAllAsync();
             if (countries != null)
             {
-                var countryDtos = countries.ToCountryDtoList();
-                return new Response() { Data = countryDtos };
+                return new Response() { Data = _mapper.Map<List<CountryDto>>(countries) };
             }
             return new Response() { };
         }
@@ -58,47 +96,15 @@ namespace EcommerceApp.Controllers
             return new Response() { };
         }
 
-        //[HttpDelete("DeleteCountry")]
-        //public async Task<Result> DeleteCountry([FromBody] List<int> countryIds)
-        //{
-        //    foreach (var id in countryIds)
-        //    {
-        //        var country = await _context.Countries.FindAsync(id);
-        //        if (country != null)
-        //        {
-        //            _context.Countries.Remove(country);
-        //        }
-        //        else
-        //        {
-        //            return new Result()
-        //            {
-        //                Notification = new Notification()
-        //                {
-        //                    Message = $"failed:  country with id = {id} not found",
-        //                    Status = NotificationStatus.Error,
-        //                    Title = "couldn't deleted"
-        //                }
-        //            };
-        //        };
-        //    }
-        //    try
-        //    {
-        //        await _context.SaveChangesAsync();
-        //        return new Result()
-        //        {
-        //            Notification = new Notification()
-        //            {
-        //                Message = "selected countries deleted successfully",
-        //                Status = NotificationStatus.Success,
-        //                Title = "successfully deleted"
-        //            }
-        //        };
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw new NotFoundException("Failed to deletete selected countries");
-        //    }
-        //}
+        [HttpDelete("DeleteCountry")]
+        public async Task<Response> DeleteCountry([FromBody] List<int> countryIds)
+        {
+            var result = await _countryService.DeleteAsync(countryIds);
+            if (result)
+            {
+                return new Response() { Notification = DefaultNotifications.Success<Country>(CRUD_Action.Delete) };
+            }
+            return new Response() { Notification = DefaultNotifications.Error<Country>(CRUD_Action.Delete)};
+        }
     }
 }

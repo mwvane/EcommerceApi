@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Net;
 using System.Reflection;
 
 namespace EcommerceApp
@@ -31,5 +32,4 @@ namespace EcommerceApp
               .Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
-
 }

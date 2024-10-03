@@ -17,7 +17,8 @@ namespace Ecommerce.Application.Services
 
         public async Task<ICollection<Option>> GetAllAsync()
         {
-            return await _optionRepository.GetAllAsync();
+            var options = await _optionRepository.GetAllAsync();
+            return options.Reverse().ToList();
         }
 
         public async Task<Option?> GetByIdAsync(int id)

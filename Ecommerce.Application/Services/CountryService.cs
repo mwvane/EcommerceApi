@@ -1,4 +1,5 @@
-﻿using Ecommerce.Core.Entities;
+﻿using Ecommerce.Application.Helpers;
+using Ecommerce.Core.Entities;
 using Ecommerce.Core.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -18,17 +19,26 @@ namespace Ecommerce.Application.Services
 
         public Task<Country?> AddAsync(Country entity)
         {
-            throw new NotImplementedException();
+            return _countryRepository.AddAsync(entity);
         }
 
         public Task<bool> DeleteAsync(List<int> ids)
         {
-            throw new NotImplementedException();
+           return (_countryRepository.DeleteAsync(ids));
         }
 
         public async Task<ICollection<Country>> GetAllAsync()
         {
-            return await _countryRepository.GetAllAsync();
+            var host = HostHeplers.url;
+            var countries = await _countryRepository.GetAllAsync();
+            foreach(var country in countries)
+            {
+                if(country.Image != null)
+                {
+                    country.Image = $"{host}/{country.Image}";
+                }
+            }
+            return countries.OrderBy(x => x.Name).ToList();
         }
 
         public async Task<Country?> GetByIdAsync(int id)

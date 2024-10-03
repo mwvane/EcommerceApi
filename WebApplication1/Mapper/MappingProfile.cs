@@ -20,6 +20,8 @@ namespace Ecommerce.Api.Mapper
             CreateMap<ManufacturerDto, Manufacturer>();
             CreateMap<Product, ProductDto>();
             CreateMap<ProductDto, Product>();
+            CreateMap<ProductImages, ProductImagesDto>();
+            CreateMap<ProductImagesDto, ProductImages>();
             CreateMap<User, UserDto>();
             CreateMap<UserDto, User>();
             

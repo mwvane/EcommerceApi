@@ -35,9 +35,30 @@ namespace Ecommerce.Infrastructure.Data
             throw new NotImplementedException();
         }
 
-        public Task<bool> DeleteAsync(List<int> ids)
+        public async Task<bool> DeleteAsync(List<int> ids)
         {
-            throw new NotImplementedException();
+            try
+            {
+                foreach (var id in ids)
+                {
+                    var country = await _context.Countries.Where(c => c.Id == id).FirstOrDefaultAsync();
+                    if (country != null)
+                    {
+                        _context.Countries.Remove(country);
+                    }
+                    else
+                    {
+                        throw new Exception($"option with ID - '{id}' not found");
+                    }
+
+                }
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"An error occured! options couldn't deleted. Try again");
+            }
         }
 
         public async Task<ICollection<Country>> GetAllAsync()

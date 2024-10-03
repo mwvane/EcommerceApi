@@ -12,9 +12,9 @@ namespace Ecommerce.Api.Extensions
             if (country == null) { return null; }
             return new CountryDto()
             {
-               Id = country.Id,
-               Name = country.Name,
-               Image = country.Image,
+                Id = country.Id,
+                Name = country.Name,
+                //Image = country.Image,
             };
         }
         public static Country? ToCountry(this CountryDto country)
@@ -24,7 +24,7 @@ namespace Ecommerce.Api.Extensions
             {
                 Id = country.Id,
                 Name = country.Name,
-                Image = country.Image,
+                //Image = country.Image,
             };
         }
 

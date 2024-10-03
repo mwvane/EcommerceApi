@@ -25,9 +25,10 @@ namespace Ecommerce.Application.Services
             throw new NotImplementedException();
         }
 
-        public Task<ICollection<Category>> GetAllAsync()
+        public async Task<ICollection<Category>> GetAllAsync()
         {
-            return _categoryRepository.GetAllAsync();
+            var catgories = await _categoryRepository.GetAllAsync();
+            return catgories.Reverse().ToList();
         }
 
         public Task<Category?> GetByIdAsync(int id)

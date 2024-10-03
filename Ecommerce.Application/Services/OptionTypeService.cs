@@ -14,7 +14,8 @@ namespace Ecommerce.Application.Services
         public OptionTypeService(IOptionTypeRepository optionTypeRepository) { _optionTypeRepository = optionTypeRepository; }
         public async Task<ICollection<OptionType>> GetAllOptionTypes()
         {
-            return await _optionTypeRepository.GetAllAsync();
+            var data = await _optionTypeRepository.GetAllAsync();
+            return data.OrderBy(x => x.Name).ToList();
         }
 
         public Task<ICollection<OptionType>> GetAllAsync()

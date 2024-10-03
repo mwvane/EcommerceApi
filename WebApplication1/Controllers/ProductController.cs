@@ -1,4 +1,10 @@
-﻿using EcommerceApp.Models;
+﻿using AutoMapper;
+using Ecommerce.Api.Extensions;
+using Ecommerce.Api.Models;
+using Ecommerce.Api.Notifications;
+using Ecommerce.Application.Services;
+using Ecommerce.Core.Entities;
+using EcommerceApp.Models;
 using EcommerceApp.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +12,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Net;
 using System.Text.Json;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace EcommerceApp.Controllers
 {
@@ -14,11 +21,15 @@ namespace EcommerceApp.Controllers
     [ApiController]
     public class ProductController : Controller
     {
-        //private readonly Context _context;
-        //public ProductController(Context context)
-        //{
-        //    _context = context;
-        //}
+        private readonly ProductService _productService;
+        private readonly ProductImagesService _productImagesService;
+        private readonly IMapper _mapper;
+        public ProductController(ProductService productService, ProductImagesService productImagesService, IMapper mapper)
+        {
+            _productService = productService;
+            _productImagesService = productImagesService;
+            _mapper = mapper;
+        }
         //[HttpGet("GetProducts")]
         //public Result GetProducts()
         //{
@@ -26,47 +37,48 @@ namespace EcommerceApp.Controllers
         //    return new Result() { Data = data };
         //}
 
-        //[HttpPost("AddProduct"), DisableRequestSizeLimit]
-        //public async Task<Result> AddProduct([FromForm] IFormCollection data)
-        //{
-        //    var images = data.Files;
-        //    var productJson = data["product"];
-        //    ProductDto productDto = JsonConvert.DeserializeObject<ProductDto>(productJson[0]);
-        //    var product = new Product
-        //    {
-        //        ManufacturerId = productDto!.Manufacturer.Id,
-        //        CategoryId = productDto.Category.Id,
-        //        Description = productDto.Description!,
-        //        Name = productDto.Name,
-        //        Price = productDto.Price,
-        //    };
-        //    await _context.Products.AddAsync(product);
-        //    await _context.SaveChangesAsync();
+        [HttpPost("AddProduct"), DisableRequestSizeLimit]
+        public async Task<Response> AddProduct([FromForm] IFormCollection data)
+        {
 
-        //    //set options
-        //    foreach (var item in productDto.Options)
-        //    {
-        //        _context.ProductOptions.Add(new ProductOption { OptionId = item.OptionId, ProductId = product.ProductId });
-        //    }
-        //    await _context.SaveChangesAsync();
+            var images = data.Files;
+            var productJson = data["product"];
+            ProductDto productDto = JsonConvert.DeserializeObject<ProductDto>(productJson[0]);
+            var product = _mapper.Map<Product>(productDto);
+            var result = await _productService.AddAsync(product);
+            if (result != null && result.Id != 0)
+            {
+                var stringImages = await FileService.SaveImageListToString(images, UploadType.ProductImages);
 
-        //    // SAVE IMAGES
-        //    var urls = await FileService.SaveFile(new UploadFile { Id = product.ProductId, File = images, UploadType = UploadType.ProductImage });
+                var productImagesDtos = stringImages.ToOptionTypeDto(product.Id);
 
-        //    //Bind images to product
-        //    if (urls != null)
-        //    {
-        //        foreach (var url in urls)
-        //        {
-        //            _context.ProductImages.Add(new ProductImages { ProductId = product.ProductId, Url = url });
-        //        }
-        //        _context.SaveChanges();
-        //    }
+                var productImages = _mapper.Map<List<ProductImages>>(productImagesDtos);
 
+                var imagesResult = await _productImagesService.AddListImmages(productImages);
+                return new Response()
+                {
+                    Data = result,
+                    Notification = DefaultNotifications.Success<Product>(CRUD_Action.Create)
+                };
+            }
+            return new Response()
+            {
+                Notification = DefaultNotifications.Success<Product>(CRUD_Action.Create)
+            };
 
-        //    return new Result() { Data = product };
-        //}
+        }
 
+        [HttpGet("GetProducts"), DisableRequestSizeLimit]
+
+        public async Task<Response> GetProducts()
+        {
+            var data = await _productService.GetAllAsync();
+            if (data != null)
+            {
+                return new Response() { Data = data };
+            }
+            throw new Exception("Coulldnot load Products");
+        }
         //[HttpDelete("DeleteProduct/{id}")]
         //public async Task<IActionResult> DeleteProduct(int id)
         //{
@@ -136,14 +148,14 @@ namespace EcommerceApp.Controllers
         //                }).ToList();
 
         //    return data;
-        }
     }
+}
 
-    public enum ProductType
-    {
-        None = 0,
-        Special = 1,
-        Latest = 2,
-        Trading = 3,
-    }
+public enum ProductType
+{
+    None = 0,
+    Special = 1,
+    Latest = 2,
+    Trading = 3,
+}
 

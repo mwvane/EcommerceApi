@@ -6,6 +6,51 @@ namespace EcommerceApp
 {
     public static  class FileService
     {
+        public static Dictionary<string,string> directories = new Dictionary<string, string>()
+        {
+            {"countries", "Countries" },
+            {"icons", "Icons" },
+            {"others", "Others" },
+            {"productimages", "ProductImages" },
+        };
+        public static async Task<string> SaveImageToStorage(IFormFile image, UploadType type = UploadType.Others)
+        {
+            var folderPath = Path.Combine("Resources", directories[type.ToString().ToLower()]);
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
+            var fullPath = Path.Combine(folderPath, fileName).Replace("\\", "/");
+            using (var stream = new FileStream(fullPath, FileMode.Create))
+            {
+                await image.CopyToAsync(stream);
+            }
+
+            return fullPath;
+        }
+
+        public static async Task<List<string>> SaveImageListToString(IFormFileCollection images, UploadType type = UploadType.Others)
+        {
+            var imagesList = new List<string>();
+
+            foreach (var image in images)
+            {
+                if (image != null)
+                {
+                    var imageString = await SaveImageToStorage(image, type);
+                    imagesList.Add(imageString);
+                }
+            }
+
+            return imagesList;
+        }
+
+        public static string GetFullPath(string path)
+        {
+            var fullPath = Path.Combine(Directory.GetCurrentDirectory(), path).Replace("\\", "/");
+            return fullPath;
+        }
 
         //public static async Task<IList<string>?> SaveFile(UploadFile file)
         //{
@@ -59,7 +104,7 @@ namespace EcommerceApp
         //                //}
         //            }
         //            return urls;
-                   
+
         //            //var user = _context.Users.FirstOrDefault(item => item.Id == file.UserId);
         //            //var category = _context.Categories.FirstOrDefault(c => c.Id == file.UserId);
         //            //if (category != null)
@@ -95,9 +140,11 @@ namespace EcommerceApp
     public enum UploadType
     {
         None,
-        ProductImage,
+        ProductImages,
         UserImage,
         Icon,
-        Documnet
+        Documnet,
+        Countries,
+        Others
     }
 }
