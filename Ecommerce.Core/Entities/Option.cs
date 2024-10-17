@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Ecommerce.Core.Entities
 {
@@ -13,6 +14,7 @@ namespace Ecommerce.Core.Entities
         [Required]
         public int OptionTypeId { get; set; }
         public OptionType OptionType { get; set; }
+        [JsonIgnore]
         public ICollection<ProductOption> ProductOptions { get; set; }
 
     }

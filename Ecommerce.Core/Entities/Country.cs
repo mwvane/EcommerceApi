@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Ecommerce.Core.Entities
 {
@@ -10,7 +11,7 @@ namespace Ecommerce.Core.Entities
         [Required]
         public string Name { get; set; }
         public string Image { get; set; }
-
+        [JsonIgnore]
         public ICollection<Manufacturer> Manufacturers { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Ecommerce.Application.Helpers;
 using Ecommerce.Core.Entities;
 using Ecommerce.Core.Interfaces;
+using EcommerceApp.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -40,15 +41,14 @@ namespace Ecommerce.Infrastructure.Data
         public async Task<ICollection<Product>> GetAllAsync()
         {
             return await _context.Products
-                .Include(p => p.ProductOptions)
-                .ThenInclude(po => po.Option)
-                .Include(p => p.Category)
-                .Include(p => p.Manufacturer)
-                .Include(p => p.Ratings)
-                .Include(pi => pi.ProductImages)
-                .Include(p => p.Discounts)
-                .Include(p => p.ViewCounts)
-                .ToListAsync();
+                        .Include(p => p.ProductOptions)
+                        .ThenInclude(po => po.Option)
+                        .Include(p => p.Category)
+                        .Include(p => p.Manufacturer)
+                        .Include(p => p.Ratings)
+                        .Include(p => p.ProductImages)
+                        .Include(p => p.Discounts)
+                        .Include(p => p.ViewCounts).ToListAsync();
         }
 
         public Task<Product?> GetByIdAsync(int id)
