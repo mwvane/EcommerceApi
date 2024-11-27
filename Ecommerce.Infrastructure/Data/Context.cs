@@ -1,4 +1,5 @@
 ﻿using Ecommerce.Core.Entities;
+using Ecommerce.Core.Entities.FormData;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using DbContext = Microsoft.EntityFrameworkCore.DbContext;
@@ -27,6 +28,12 @@ namespace Ecommerce.Infrastructure.Data
         public DbSet<Option> Options { get; set; }
         public DbSet<OptionType> OptionsTypes { get; set; }
         public DbSet<ProductOption> ProductOptions { get; set; }
+        public DbSet<Form> Forms { get; set; }
+        public DbSet<Section> Sections { get; set; }
+        public DbSet<FormControl> FormControls { get; set; }
+        public DbSet<Validator> Validators { get; set; }
+        public DbSet<DropdownItem> DropdownItems { get; set; }
+        public DbSet<AdditionalLink> AdditionalLinks { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -37,6 +44,7 @@ namespace Ecommerce.Infrastructure.Data
             .HasMany(c => c.SubCategories)
             .WithOne(c => c.ParentCategory)
             .HasForeignKey(c => c.ParentCategoryId);
+
             modelBuilder.Entity<CartItem>()
                 .HasKey(ci => new { ci.CartId, ci.ProductId });
 
@@ -68,6 +76,31 @@ namespace Ecommerce.Infrastructure.Data
             .HasOne(o => o.OptionType)
             .WithMany(ot => ot.Options)
             .HasForeignKey(o => o.OptionTypeId);
+
+            modelBuilder.Entity<Form>()
+            .HasMany(f => f.Sections)
+            .WithOne(s => s.Form)
+            .HasForeignKey(s => s.FormId);
+
+            modelBuilder.Entity<Section>()
+                .HasMany(s => s.FormControls)
+                .WithOne(fc => fc.Section)
+                .HasForeignKey(fc => fc.SectionId);
+
+            modelBuilder.Entity<FormControl>()
+                .HasMany(fc => fc.Validators)
+                .WithOne(v => v.FormControl)
+                .HasForeignKey(v => v.FormControlId);
+
+            modelBuilder.Entity<FormControl>()
+                .HasMany(fc => fc.AdditionalLinks)
+                .WithOne(l => l.FormControl)
+                .HasForeignKey(l => l.FormControlId);
+
+            modelBuilder.Entity<FormControl>()
+                .HasMany(fc => fc.Options)
+                .WithOne(o => o.FormControl)
+                .HasForeignKey(o => o.FormControlId);
 
             // INITIAL DATA
             modelBuilder.Entity<Category>().HasData(
@@ -159,6 +192,112 @@ namespace Ecommerce.Infrastructure.Data
                    ProductId = 1,
                    Url = "/Resources/Images/Products/s24.jpg",
                });
+
+            modelBuilder.Entity<Form>().HasData(new Form
+            {
+                Id = 1,
+                Title = "Login Form",
+                ResetButtonTitle = "Clear",
+                SubmitButtonTitle = "Login",
+                SubmitButtonIcon = "bi bi-box-arrow-in-right",
+                ResetButtonIcon = "bi bi-arrow-clockwise",
+                Loading = false
+            });
+
+            modelBuilder.Entity<Section>().HasData(new Section
+            {
+                Id = 1,
+                Name = "Customer",
+                Border = true,
+                FormId = 1
+            });
+
+            modelBuilder.Entity<FormControl>().HasData(new FormControl
+            {
+                Id = 1,
+                Label = "Email",
+                Name = "email",
+                Placeholder = "Enter your email",
+                Type = "email",
+                Value = "",
+                SectionId = 1
+            });
+
+            //modelBuilder.Entity<Form>().HasData(
+            //   new Form
+            //   {
+            //       Id = 1,
+            //       FormTitle = "login form",
+            //       ResetBtnTitle = "Clear",
+            //       ResetButtonIcon = "bi bi-arrow-clockwise",
+            //       SubmitButtonTitle = "Login",
+            //       SubmitButtonIcon = "bi bi-box-arrow-in-right",
+            //   });
+
+            //modelBuilder.Entity<Section>().HasData(
+            //    new Section
+            //    {
+            //        Id = 1,
+            //        Border = false,
+            //        SectionName = "customer",
+            //        FormId = 1,
+            //    });
+
+            //modelBuilder.Entity<FormControl>().HasData(
+            //   new FormControl
+            //   {
+            //       Id = 1,
+            //       Label = "email",
+            //       Name = "email",
+            //       Value = "",
+            //       Placeholder = "email",
+            //       Type = "email",
+            //   },
+            //   new FormControl
+            //   {
+            //       Id = 2,
+            //       Label = "password",
+            //       Name = "password",
+            //       Value = "",
+            //       Placeholder = "password",
+            //       Type = "password",
+            //   },
+            //   new FormControl
+            //   {
+            //       Id = 3,
+            //       Type = "link",
+            //       Name = "forgrt password"
+            //   }
+            //   );
+
+            //modelBuilder.Entity<AdditionalLink>().HasData(
+            //    new AdditionalLink
+            //    {
+            //        Id = 1,
+            //        Name = "forget password?",
+            //        Url = "/Home"
+            //    }
+            //    );
+
+            //modelBuilder.Entity<Validator>().HasData(
+            //   new Validator
+            //   {
+            //       Id = 1,
+            //       FormControlId = 2,
+            //       ValidatorName = "required",
+            //       Required = true,
+            //       Message = "requred"
+
+            //   },
+            //   new Validator
+            //   {
+            //       Id = 2,
+            //       FormControlId = 1,
+            //       ValidatorName = "email",
+            //       Required = true,
+            //       Message = "required"
+            //   }
+            //   );
 
         }
 

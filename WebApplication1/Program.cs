@@ -12,9 +12,14 @@ using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 builder.Services.AddDbContext<Ecommerce.Infrastructure.Data.Context>(options =>
-   options.UseSqlServer(builder.Configuration.GetConnectionString("context")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("context"),
+        sqlOptions => sqlOptions.MigrationsAssembly("Ecommerce.Infrastructure")
+    )
+);
+//builder.Services.AddDbContext<Ecommerce.Infrastructure.Data.Context>(options =>
+//   options.UseSqlServer(builder.Configuration.GetConnectionString("context")));
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
@@ -30,10 +35,15 @@ builder.Services.AddScoped<IManufacturerRepository, ManufacturerRepository>();
 builder.Services.AddScoped<ManufacturerService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<CategoryService>();
+
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ProductService>();
+
 builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
 builder.Services.AddScoped<ProductImagesService>();
+
+builder.Services.AddScoped<FormService>();
+builder.Services.AddScoped<IFormRepository, FormRepository>();
 
 
 
